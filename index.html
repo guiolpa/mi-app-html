@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Lista de Compra - Pollo a la Barbacoa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #FFF9F0;
+        }
+        
+        .ingredient-row:nth-child(odd) {
+            background-color: rgba(255, 152, 0, 0.05);
+        }
+        
+        @media print {
+            .no-print {
+                display: none;
+            }
+            
+            body {
+                background-color: white;
+            }
+            
+            .print-container {
+                padding: 0;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-t-xl p-6 text-white text-center shadow-lg">
+            <h1 class="text-3xl md:text-4xl font-bold mb-2">Pollo a la Barbacoa</h1>
+            <p class="text-lg opacity-90">Generador de lista de compra</p>
+        </div>
+        
+        <div class="bg-white rounded-b-xl p-6 shadow-lg print-container mb-8">
+            <div class="no-print mb-8">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6 mb-6">
+                    <div class="w-full md:w-1/2">
+                        <label for="servings" class="block text-gray-700 font-medium mb-2">Número de raciones:</label>
+                        <div class="flex items-center">
+                            <button id="decrease" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-l transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <input type="number" id="servings" min="1" value="4" class="py-2 px-4 w-16 text-center border-t border-b border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <button id="increase" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-r transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-1/2 flex justify-end">
+                        <button id="print-button" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded flex items-center gap-2 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" />
+                            </svg>
+                            Imprimir lista
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="bg-amber-50 p-4 rounded-lg border border-amber-200 mb-6">
+                    <h2 class="text-xl font-semibold text-amber-800 mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                        </svg>
+                        Información
+                    </h2>
+                    <p class="text-amber-700">Ajusta el número de raciones para calcular automáticamente las cantidades necesarias para tu pollo a la barbacoa. Puedes imprimir la lista para llevarla al supermercado.</p>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    Lista de Compra
+                </h2>
+                
+                <div class="border rounded-lg overflow-hidden">
+                    <div class="bg-orange-500 text-white py-3 px-4 font-semibold grid grid-cols-12">
+                        <div class="col-span-6 md:col-span-7">Ingrediente</div>
+                        <div class="col-span-3 md:col-span-3 text-center">Cantidad</div>
+                        <div class="col-span-3 md:col-span-2 text-center no-print">Comprado</div>
+                    </div>
+                    
+                    <div id="ingredients-list">
+                        <!-- Los ingredientes se generarán dinámicamente con JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 print-only">
+                <p class="text-gray-500 text-sm text-center">Lista generada para <span id="print-servings">4</span> raciones de Pollo a la Barbacoa</p>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl p-6 shadow-lg no-print">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                Receta Básica
+            </h2>
+            
+            <div class="space-y-4 text-gray-700">
+                <p>1. Mezcla todos los ingredientes de la marinada en un recipiente grande.</p>
+                <p>2. Añade el pollo y asegúrate de que quede bien cubierto. Deja marinar por al menos 2 horas (idealmente toda la noche).</p>
+                <p>3. Precalienta la barbacoa a fuego medio-alto.</p>
+                <p>4. Cocina el pollo en la parrilla, volteándolo ocasionalmente, hasta que esté bien cocido (aproximadamente 15-20 minutos).</p>
+                <p>5. Sirve caliente con las guarniciones de tu elección.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Definición de ingredientes base para 4 personas
+        const baseIngredients = [
+            { name: "Muslos de pollo", quantity: 8, unit: "unidades", category: "Carnes" },
+            { name: "Salsa barbacoa", quantity: 200, unit: "ml", category: "Salsas" },
+            { name: "Miel", quantity: 2, unit: "cucharadas", category: "Endulzantes" },
+            { name: "Salsa de soja", quantity: 3, unit: "cucharadas", category: "Salsas" },
+            { name: "Ajo", quantity: 4, unit: "dientes", category: "Verduras" },
+            { name: "Pimentón ahumado", quantity: 1, unit: "cucharada", category: "Especias" },
+            { name: "Comino molido", quantity: 1, unit: "cucharadita", category: "Especias" },
+            { name: "Pimienta negra", quantity: 1, unit: "cucharadita", category: "Especias" },
+            { name: "Aceite de oliva", quantity: 3, unit: "cucharadas", category: "Aceites" },
+            { name: "Limón", quantity: 1, unit: "unidad", category: "Frutas" },
+            { name: "Cebolla", quantity: 1, unit: "unidad", category: "Verduras" },
+            { name: "Cilantro fresco", quantity: 1, unit: "manojo", category: "Hierbas" }
+        ];
+
+        // Elementos del DOM
+        const servingsInput = document.getElementById('servings');
+        const decreaseBtn = document.getElementById('decrease');
+        const increaseBtn = document.getElementById('increase');
+        const ingredientsList = document.getElementById('ingredients-list');
+        const printButton = document.getElementById('print-button');
+        const printServings = document.getElementById('print-servings');
+
+        // Función para actualizar la lista de ingredientes
+        function updateIngredientsList() {
+            const servings = parseInt(servingsInput.value);
+            printServings.textContent = servings;
+            
+            // Agrupar ingredientes por categoría
+            const categorizedIngredients = {};
+            
+            baseIngredients.forEach(ingredient => {
+                if (!categorizedIngredients[ingredient.category]) {
+                    categorizedIngredients[ingredient.category] = [];
+                }
+                
+                // Calcular la cantidad ajustada según el número de raciones
+                const adjustedQuantity = (ingredient.quantity / 4) * servings;
+                
+                // Formatear la cantidad para que sea legible
+                let formattedQuantity;
+                if (adjustedQuantity % 1 === 0) {
+                    formattedQuantity = adjustedQuantity;
+                } else {
+                    formattedQuantity = adjustedQuantity.toFixed(1).replace('.0', '');
+                }
+                
+                categorizedIngredients[ingredient.category].push({
+                    ...ingredient,
+                    adjustedQuantity: formattedQuantity
+                });
+            });
+            
+            // Limpiar la lista actual
+            ingredientsList.innerHTML = '';
+            
+            // Añadir ingredientes por categoría
+            Object.keys(categorizedIngredients).sort().forEach(category => {
+                // Añadir encabezado de categoría
+                const categoryHeader = document.createElement('div');
+                categoryHeader.className = 'bg-orange-100 py-2 px-4 font-medium text-orange-800';
+                categoryHeader.textContent = category;
+                ingredientsList.appendChild(categoryHeader);
+                
+                // Añadir ingredientes de esta categoría
+                categorizedIngredients[category].forEach(ingredient => {
+                    const row = document.createElement('div');
+                    row.className = 'ingredient-row grid grid-cols-12 py-3 px-4 border-b last:border-b-0 items-center';
+                    
+                    row.innerHTML = `
+                        <div class="col-span-6 md:col-span-7">${ingredient.name}</div>
+                        <div class="col-span-3 md:col-span-3 text-center">${ingredient.adjustedQuantity} ${ingredient.unit}</div>
+                        <div class="col-span-3 md:col-span-2 text-center no-print">
+                            <input type="checkbox" class="w-5 h-5 accent-orange-500 cursor-pointer">
+                        </div>
+                    `;
+                    
+                    ingredientsList.appendChild(row);
+                });
+            });
+        }
+
+        // Event listeners
+        decreaseBtn.addEventListener('click', () => {
+            if (parseInt(servingsInput.value) > 1) {
+                servingsInput.value = parseInt(servingsInput.value) - 1;
+                updateIngredientsList();
+            }
+        });
+
+        increaseBtn.addEventListener('click', () => {
+            servingsInput.value = parseInt(servingsInput.value) + 1;
+            updateIngredientsList();
+        });
+
+        servingsInput.addEventListener('change', () => {
+            if (parseInt(servingsInput.value) < 1) {
+                servingsInput.value = 1;
+            }
+            updateIngredientsList();
+        });
+
+        printButton.addEventListener('click', () => {
+            window.print();
+        });
+
+        // Inicializar la lista
+        updateIngredientsList();
+    </script>
+</body>
+</html>
