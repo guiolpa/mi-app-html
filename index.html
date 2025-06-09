@@ -3,238 +3,1359 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Lista de Compra - Pollo a la Barbacoa</title>
+    <title>RIFA</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-        
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #FFF9F0;
+            background-color: #f0f4f8;
         }
-        
-        .ingredient-row:nth-child(odd) {
-            background-color: rgba(255, 152, 0, 0.05);
+        .error-message {
+            animation: shake 0.5s;
         }
-        
-        @media print {
-            .no-print {
-                display: none;
-            }
-            
-            body {
-                background-color: white;
-            }
-            
-            .print-container {
-                padding: 0;
-                box-shadow: none;
-            }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .card {
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+        .number-badge {
+            transition: all 0.2s ease;
+        }
+        .number-badge:hover {
+            transform: scale(1.1);
+        }
+        .delete-number {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .number-badge:hover .delete-number {
+            opacity: 1;
+        }
+        .course-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .course-item:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        .course-item.active {
+            background-color: rgba(59, 130, 246, 0.2);
+            border-left: 4px solid #3b82f6;
+        }
+        .btn-add-five {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .btn-add-five:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+        .teacher-input {
+            border-bottom: 1px dashed #ccc;
+            transition: all 0.2s ease;
+        }
+        .teacher-input:focus {
+            border-bottom: 1px solid #3b82f6;
+            outline: none;
+        }
+        .edit-icon {
+            opacity: 0.5;
+            transition: opacity 0.2s ease;
+        }
+        .teacher-container:hover .edit-icon {
+            opacity: 1;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
+            animation: modalFadeIn 0.3s;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .progress-bar {
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            transition: width 0.3s ease;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 33%;
+        }
+        .step-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #e5e7eb;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        .step.active .step-circle {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .step.completed .step-circle {
+            background-color: #10b981;
+            color: white;
+        }
+        .step-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-align: center;
+        }
+        .step.active .step-label {
+            color: #3b82f6;
+            font-weight: 500;
+        }
+        .step.completed .step-label {
+            color: #10b981;
+            font-weight: 500;
+        }
+        .sync-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 100;
+            transition: all 0.3s ease;
+            opacity: 0;
+        }
+        .sync-indicator.show {
+            opacity: 1;
+        }
+        .sync-success {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .sync-error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+        .sync-loading {
+            background-color: #e0f2fe;
+            color: #0369a1;
+        }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(3, 105, 161, 0.3);
+            border-radius: 50%;
+            border-top-color: #0369a1;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .paid-badge {
+            background-color: #10b981;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .paid-badge:hover {
+            background-color: #059669;
+        }
+        .unpaid-badge {
+            background-color: #f59e0b;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .unpaid-badge:hover {
+            background-color: #d97706;
+        }
+        .paid-number {
+            background-color: #d1fae5 !important;
+            color: #065f46 !important;
+            border: 1px solid #10b981;
+        }
+        .payment-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        .reset-button {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            transition: all 0.3s ease;
+        }
+        .reset-button:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+        }
+        .confirm-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1100;
+            justify-content: center;
+            align-items: center;
+        }
+        .confirm-modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 400px;
+            animation: modalFadeIn 0.3s;
         }
     </style>
 </head>
-<body class="min-h-screen">
-    <div class="container mx-auto px-4 py-8 max-w-4xl">
-        <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-t-xl p-6 text-white text-center shadow-lg">
-            <h1 class="text-3xl md:text-4xl font-bold mb-2">Pollo a la Barbacoa</h1>
-            <p class="text-lg opacity-90">Generador de lista de compra</p>
+<body>
+    <div class="gradient-bg text-white py-6 px-4 shadow-lg">
+        <div class="max-w-7xl mx-auto">
+            <h1 class="text-3xl font-bold text-center">RIFA</h1>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Botones de acción -->
+        <div class="flex justify-end mb-6">
+            <button id="resetButton" class="reset-button px-4 py-2 text-white font-medium rounded-md shadow-md flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+                Eliminar Todo
+            </button>
         </div>
         
-        <div class="bg-white rounded-b-xl p-6 shadow-lg print-container mb-8">
-            <div class="no-print mb-8">
-                <div class="flex flex-col md:flex-row items-center justify-between gap-6 mb-6">
-                    <div class="w-full md:w-1/2">
-                        <label for="servings" class="block text-gray-700 font-medium mb-2">Número de raciones:</label>
-                        <div class="flex items-center">
-                            <button id="decrease" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-l transition">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                            <input type="number" id="servings" min="1" value="4" class="py-2 px-4 w-16 text-center border-t border-b border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500">
-                            <button id="increase" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-r transition">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="w-full md:w-1/2 flex justify-end">
-                        <button id="print-button" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded flex items-center gap-2 transition">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" />
-                            </svg>
-                            Imprimir lista
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="bg-amber-50 p-4 rounded-lg border border-amber-200 mb-6">
-                    <h2 class="text-xl font-semibold text-amber-800 mb-2 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                        </svg>
-                        Información
-                    </h2>
-                    <p class="text-amber-700">Ajusta el número de raciones para calcular automáticamente las cantidades necesarias para tu pollo a la barbacoa. Puedes imprimir la lista para llevarla al supermercado.</p>
+        <!-- Cursos interactivos en la parte superior -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-md p-5">
+                <h3 class="text-lg font-semibold mb-3 text-blue-700">Primaria</h3>
+                <ul class="space-y-1 text-gray-700" id="primaryCourses">
+                    <li class="course-item flex items-center p-2 rounded-md" data-course="1P">
+                        <span class="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-800 rounded-full mr-2 font-medium">1</span>
+                        1º de Primaria
+                    </li>
+                    <li class="course-item flex items-center p-2 rounded-md" data-course="2P">
+                        <span class="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-800 rounded-full mr-2 font-medium">2</span>
+                        2º de Primaria
+                    </li>
+                    <li class="course-item flex items-center p-2 rounded-md" data-course="3P">
+                        <span class="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-800 rounded-full mr-2 font-medium">3</span>
+                        3º de Primaria
+                    </li>
+                    <li class="course-item flex items-center p-2 rounded-md" data-course="4P">
+                        <span class="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-800 rounded-full mr-2 font-medium">4</span>
+                        4º de Primaria
+                    </li>
+                    <li class="course-item flex items-center p-2 rounded-md" data-course="5P">
+                        <span class="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-800 rounded-full mr-2 font-medium">5</span>
+                        5º de Primaria
+                    </li>
+                    <li class="course-item flex items-center p-2 rounded-md" data-course="6P">
+                        <span class="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-800 rounded-full mr-2 font-medium">6</span>
+                        6º de Primaria
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-5">
+                <h3 class="text-lg font-semibold mb-3 text-indigo-700">ESO</h3>
+                <ul class="space-y-1 text-gray-700" id="esoCourses">
+                    <li class="course-item flex items-center p-2 rounded-md" data-course="1E">
+                        <span class="w-8 h-8 flex items-center justify-center bg-indigo-100 text-indigo-800 rounded-full mr-2 font-medium">1</span>
+                        1º de ESO
+                    </li>
+                    <li class="course-item flex items-center p-2 rounded-md" data-course="2E">
+                        <span class="w-8 h-8 flex items-center justify-center bg-indigo-100 text-indigo-800 rounded-full mr-2 font-medium">2</span>
+                        2º de ESO
+                    </li>
+                    <li class="course-item flex items-center p-2 rounded-md" data-course="3E">
+                        <span class="w-8 h-8 flex items-center justify-center bg-indigo-100 text-indigo-800 rounded-full mr-2 font-medium">3</span>
+                        3º de ESO
+                    </li>
+                    <li class="course-item flex items-center p-2 rounded-md" data-course="4E">
+                        <span class="w-8 h-8 flex items-center justify-center bg-indigo-100 text-indigo-800 rounded-full mr-2 font-medium">4</span>
+                        4º de ESO
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Panel de curso (se muestra cuando hay un curso seleccionado) -->
+        <div id="coursePanel" class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold" id="coursePanelTitle">Curso: 1º de Primaria</h2>
+                <div class="teacher-container flex items-center">
+                    <span class="text-gray-600 mr-2">Profesor:</span>
+                    <input type="text" id="teacherInput" class="teacher-input bg-transparent px-2 py-1 text-gray-600" value="María García">
+                    <svg class="edit-icon w-4 h-4 ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                    </svg>
                 </div>
             </div>
             
             <div class="mb-6">
-                <h2 class="text-2xl font-bold mb-4 text-gray-800 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                    Lista de Compra
-                </h2>
-                
-                <div class="border rounded-lg overflow-hidden">
-                    <div class="bg-orange-500 text-white py-3 px-4 font-semibold grid grid-cols-12">
-                        <div class="col-span-6 md:col-span-7">Ingrediente</div>
-                        <div class="col-span-3 md:col-span-3 text-center">Cantidad</div>
-                        <div class="col-span-3 md:col-span-2 text-center no-print">Comprado</div>
+                <h3 class="text-lg font-medium mb-3">Añadir Estudiante</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="studentName" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Estudiante</label>
+                        <input type="text" id="studentName" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nombre completo">
                     </div>
-                    
-                    <div id="ingredients-list">
-                        <!-- Los ingredientes se generarán dinámicamente con JavaScript -->
+                    <div>
+                        <label for="studentNumbers" class="block text-sm font-medium text-gray-700 mb-1">¿Cuántos números se queda?</label>
+                        <div class="flex">
+                            <input type="number" id="studentNumbers" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ej: 5">
+                            <button id="addStudent" class="ml-2 px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors">
+                                Añadir
+                            </button>
+                        </div>
+                        <div id="errorMessage" class="hidden mt-2 text-red-600 text-sm font-medium bg-red-100 border border-red-400 rounded-md p-2 error-message">
+                            ¡Error! Uno o más números ya están asignados a otro estudiante.
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div class="mt-8 print-only">
-                <p class="text-gray-500 text-sm text-center">Lista generada para <span id="print-servings">4</span> raciones de Pollo a la Barbacoa</p>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-xl p-6 shadow-lg no-print">
-            <h2 class="text-2xl font-bold mb-4 text-gray-800 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                Receta Básica
-            </h2>
-            
-            <div class="space-y-4 text-gray-700">
-                <p>1. Mezcla todos los ingredientes de la marinada en un recipiente grande.</p>
-                <p>2. Añade el pollo y asegúrate de que quede bien cubierto. Deja marinar por al menos 2 horas (idealmente toda la noche).</p>
-                <p>3. Precalienta la barbacoa a fuego medio-alto.</p>
-                <p>4. Cocina el pollo en la parrilla, volteándolo ocasionalmente, hasta que esté bien cocido (aproximadamente 15-20 minutos).</p>
-                <p>5. Sirve caliente con las guarniciones de tu elección.</p>
+            <div>
+                <h3 class="text-lg font-medium mb-3">Lista de Estudiantes</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border border-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="py-3 px-4 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b">Nombre</th>
+                                <th class="py-3 px-4 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-b">Números Asignados</th>
+                                <th class="py-3 px-4 bg-gray-100 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border-b">Estado</th>
+                                <th class="py-3 px-4 bg-gray-100 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider border-b">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsList">
+                            <!-- Los estudiantes se añadirán aquí dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="emptyMessage" class="text-center py-6 text-gray-500 hidden">
+                    No hay estudiantes registrados en este curso.
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Modal para configuración del curso -->
+    <div id="setupModal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-semibold mb-4" id="modalTitle">Configurar Curso</h3>
+            
+            <!-- Indicador de pasos -->
+            <div class="step-indicator">
+                <div class="step active" id="step1">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Número de alumnos</div>
+                </div>
+                <div class="step" id="step2">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Nombres</div>
+                </div>
+                <div class="step" id="step3">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Números</div>
+                </div>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress-bar-fill" style="width: 33%"></div>
+            </div>
+            
+            <!-- Paso 1: Número de alumnos -->
+            <div id="step1Content" class="mb-4">
+                <p class="mb-4" id="modalDescription">¿Cuántos estudiantes deseas crear para este curso?</p>
+                <label for="studentsCount" class="block text-sm font-medium text-gray-700 mb-1">Número de estudiantes</label>
+                <input type="number" id="studentsCount" min="1" max="30" value="5" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <!-- Paso 2: Nombres de los alumnos -->
+            <div id="step2Content" class="mb-4 hidden">
+                <p class="mb-4">Introduce el nombre del estudiante <span id="currentStudentNumber">1</span>:</p>
+                <label for="studentNameInput" class="block text-sm font-medium text-gray-700 mb-1">Nombre del estudiante</label>
+                <input type="text" id="studentNameInput" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nombre completo">
+            </div>
+            
+            <!-- Paso 3: Números por alumno -->
+            <div id="step3Content" class="mb-4 hidden">
+                <p class="mb-4">¿Cuántos números deseas asignar a <span id="currentStudentName">Estudiante</span>?</p>
+                <label for="studentNumbersCount" class="block text-sm font-medium text-gray-700 mb-1">Número de números</label>
+                <input type="number" id="studentNumbersCount" min="1" value="5" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button id="cancelModal" class="px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-md hover:bg-gray-300 transition-colors">
+                    Cancelar
+                </button>
+                <button id="backButton" class="px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-md hover:bg-gray-300 transition-colors hidden">
+                    Atrás
+                </button>
+                <button id="nextButton" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors">
+                    Siguiente
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación para eliminar todo -->
+    <div id="confirmModal" class="confirm-modal">
+        <div class="confirm-modal-content">
+            <h3 class="text-xl font-semibold mb-4 text-red-600">¿Eliminar todos los datos?</h3>
+            <p class="mb-6 text-gray-700">Esta acción eliminará todos los estudiantes, números y datos de todos los cursos. Esta acción no se puede deshacer.</p>
+            <div class="flex justify-end space-x-3">
+                <button id="cancelReset" class="px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-md hover:bg-gray-300 transition-colors">
+                    Cancelar
+                </button>
+                <button id="confirmReset" class="px-4 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 transition-colors">
+                    Eliminar Todo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indicador de sincronización -->
+    <div id="syncIndicator" class="sync-indicator sync-loading">
+        <span class="spinner"></span>
+        <span id="syncMessage">Sincronizando...</span>
+    </div>
+
+    <footer class="bg-gray-800 text-white py-6 px-4 mt-8">
+        <div class="max-w-7xl mx-auto text-center">
+            <p>RIFA</p>
+            <p class="text-sm mt-2 text-gray-400">© 2023 Todos los derechos reservados</p>
+        </div>
+    </footer>
+
     <script>
-        // Definición de ingredientes base para 4 personas
-        const baseIngredients = [
-            { name: "Muslos de pollo", quantity: 8, unit: "unidades", category: "Carnes" },
-            { name: "Salsa barbacoa", quantity: 200, unit: "ml", category: "Salsas" },
-            { name: "Miel", quantity: 2, unit: "cucharadas", category: "Endulzantes" },
-            { name: "Salsa de soja", quantity: 3, unit: "cucharadas", category: "Salsas" },
-            { name: "Ajo", quantity: 4, unit: "dientes", category: "Verduras" },
-            { name: "Pimentón ahumado", quantity: 1, unit: "cucharada", category: "Especias" },
-            { name: "Comino molido", quantity: 1, unit: "cucharadita", category: "Especias" },
-            { name: "Pimienta negra", quantity: 1, unit: "cucharadita", category: "Especias" },
-            { name: "Aceite de oliva", quantity: 3, unit: "cucharadas", category: "Aceites" },
-            { name: "Limón", quantity: 1, unit: "unidad", category: "Frutas" },
-            { name: "Cebolla", quantity: 1, unit: "unidad", category: "Verduras" },
-            { name: "Cilantro fresco", quantity: 1, unit: "manojo", category: "Hierbas" }
-        ];
-
-        // Elementos del DOM
-        const servingsInput = document.getElementById('servings');
-        const decreaseBtn = document.getElementById('decrease');
-        const increaseBtn = document.getElementById('increase');
-        const ingredientsList = document.getElementById('ingredients-list');
-        const printButton = document.getElementById('print-button');
-        const printServings = document.getElementById('print-servings');
-
-        // Función para actualizar la lista de ingredientes
-        function updateIngredientsList() {
-            const servings = parseInt(servingsInput.value);
-            printServings.textContent = servings;
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configuración de Firebase con una base de datos real
+            const firebaseConfig = {
+                apiKey: "AIzaSyBJI1QeUSiGDKuyYQgCk-gMGRX4N0JJbJU",
+                authDomain: "rifa-escolar-app.firebaseapp.com",
+                databaseURL: "https://rifa-escolar-app-default-rtdb.europe-west1.firebasedatabase.app",
+                projectId: "rifa-escolar-app",
+                storageBucket: "rifa-escolar-app.appspot.com",
+                messagingSenderId: "1098040621778",
+                appId: "1:1098040621778:web:5b8e7a9c9ed88e9e5d3e6d"
+            };
             
-            // Agrupar ingredientes por categoría
-            const categorizedIngredients = {};
+            // Inicializar Firebase
+            let firebaseInitialized = false;
+            let database;
             
-            baseIngredients.forEach(ingredient => {
-                if (!categorizedIngredients[ingredient.category]) {
-                    categorizedIngredients[ingredient.category] = [];
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
                 }
+                database = firebase.database();
+                firebaseInitialized = true;
+                console.log("Firebase inicializado correctamente");
+            } catch (error) {
+                console.error("Error al inicializar Firebase:", error);
+                showSyncMessage("Error de conexión. Modo sin conexión activado.", "error");
+            }
+            
+            // Elementos del DOM
+            const coursePanel = document.getElementById('coursePanel');
+            const coursePanelTitle = document.getElementById('coursePanelTitle');
+            const teacherInput = document.getElementById('teacherInput');
+            const studentNameInput = document.getElementById('studentName');
+            const studentNumbersInput = document.getElementById('studentNumbers');
+            const addStudentBtn = document.getElementById('addStudent');
+            const errorMessage = document.getElementById('errorMessage');
+            const studentsList = document.getElementById('studentsList');
+            const emptyMessage = document.getElementById('emptyMessage');
+            const primaryCourses = document.getElementById('primaryCourses');
+            const esoCourses = document.getElementById('esoCourses');
+            const syncIndicator = document.getElementById('syncIndicator');
+            const syncMessage = document.getElementById('syncMessage');
+            const resetButton = document.getElementById('resetButton');
+            const confirmModal = document.getElementById('confirmModal');
+            const cancelReset = document.getElementById('cancelReset');
+            const confirmReset = document.getElementById('confirmReset');
+            
+            // Elementos del modal
+            const setupModal = document.getElementById('setupModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalDescription = document.getElementById('modalDescription');
+            const studentsCount = document.getElementById('studentsCount');
+            const studentNameInput2 = document.getElementById('studentNameInput');
+            const studentNumbersCount = document.getElementById('studentNumbersCount');
+            const currentStudentNumber = document.getElementById('currentStudentNumber');
+            const currentStudentName = document.getElementById('currentStudentName');
+            const cancelModal = document.getElementById('cancelModal');
+            const backButton = document.getElementById('backButton');
+            const nextButton = document.getElementById('nextButton');
+            
+            // Elementos de pasos
+            const step1 = document.getElementById('step1');
+            const step2 = document.getElementById('step2');
+            const step3 = document.getElementById('step3');
+            const step1Content = document.getElementById('step1Content');
+            const step2Content = document.getElementById('step2Content');
+            const step3Content = document.getElementById('step3Content');
+            const progressBarFill = document.querySelector('.progress-bar-fill');
+            
+            // Orden de los cursos para la secuencia de números
+            const courseOrder = ['1P', '2P', '3P', '4P', '5P', '6P', '1E', '2E', '3E', '4E'];
+            
+            // Objeto para almacenar los datos de todos los cursos
+            let schoolData = {};
+            
+            // Curso actual seleccionado
+            let currentCourse = null; // Inicialmente no hay curso seleccionado
+            let pendingCourseChange = null; // Para almacenar el curso pendiente de cambio
+            
+            // Variables para el proceso de configuración
+            let currentStep = 1;
+            let totalStudents = 0;
+            let currentStudentIndex = 0;
+            let tempStudents = []; // Para almacenar temporalmente los datos de los estudiantes
+            let nextAvailableNumberGlobal = 1; // Número inicial disponible
+            
+            // Variable para controlar si estamos actualizando desde Firebase
+            let updatingFromFirebase = false;
+            
+            // Función para mostrar el nombre completo del curso
+            function getFullCourseName(courseCode) {
+                const courseNames = {
+                    '1P': '1º de Primaria',
+                    '2P': '2º de Primaria',
+                    '3P': '3º de Primaria',
+                    '4P': '4º de Primaria',
+                    '5P': '5º de Primaria',
+                    '6P': '6º de Primaria',
+                    '1E': '1º de ESO',
+                    '2E': '2º de ESO',
+                    '3E': '3º de ESO',
+                    '4E': '4º de ESO'
+                };
+                return courseNames[courseCode] || courseCode;
+            }
+            
+            // Función para mostrar mensajes de sincronización
+            function showSyncMessage(message, type) {
+                syncMessage.textContent = message;
+                syncIndicator.className = 'sync-indicator show';
                 
-                // Calcular la cantidad ajustada según el número de raciones
-                const adjustedQuantity = (ingredient.quantity / 4) * servings;
-                
-                // Formatear la cantidad para que sea legible
-                let formattedQuantity;
-                if (adjustedQuantity % 1 === 0) {
-                    formattedQuantity = adjustedQuantity;
+                if (type === 'success') {
+                    syncIndicator.classList.add('sync-success');
+                } else if (type === 'error') {
+                    syncIndicator.classList.add('sync-error');
                 } else {
-                    formattedQuantity = adjustedQuantity.toFixed(1).replace('.0', '');
+                    syncIndicator.classList.add('sync-loading');
                 }
                 
-                categorizedIngredients[ingredient.category].push({
-                    ...ingredient,
-                    adjustedQuantity: formattedQuantity
-                });
-            });
+                // Ocultar el mensaje después de 3 segundos
+                setTimeout(() => {
+                    syncIndicator.classList.remove('show');
+                }, 3000);
+            }
             
-            // Limpiar la lista actual
-            ingredientsList.innerHTML = '';
-            
-            // Añadir ingredientes por categoría
-            Object.keys(categorizedIngredients).sort().forEach(category => {
-                // Añadir encabezado de categoría
-                const categoryHeader = document.createElement('div');
-                categoryHeader.className = 'bg-orange-100 py-2 px-4 font-medium text-orange-800';
-                categoryHeader.textContent = category;
-                ingredientsList.appendChild(categoryHeader);
+            // Función para guardar los datos en Firebase
+            function saveDataToFirebase() {
+                if (!firebaseInitialized) {
+                    console.log("Firebase no está inicializado, guardando localmente");
+                    localStorage.setItem('schoolData', JSON.stringify(schoolData));
+                    return;
+                }
                 
-                // Añadir ingredientes de esta categoría
-                categorizedIngredients[category].forEach(ingredient => {
-                    const row = document.createElement('div');
-                    row.className = 'ingredient-row grid grid-cols-12 py-3 px-4 border-b last:border-b-0 items-center';
+                if (updatingFromFirebase) return; // Evitar bucles de actualización
+                
+                showSyncMessage("Sincronizando...", "loading");
+                
+                database.ref('schoolData').set(schoolData)
+                    .then(() => {
+                        console.log("Datos guardados en Firebase");
+                        showSyncMessage("Datos sincronizados correctamente", "success");
+                    })
+                    .catch((error) => {
+                        console.error("Error al guardar en Firebase:", error);
+                        showSyncMessage("Error al sincronizar. Guardando localmente.", "error");
+                        localStorage.setItem('schoolData', JSON.stringify(schoolData));
+                    });
+            }
+            
+            // Función para cargar los datos desde Firebase
+            function loadDataFromFirebase(forceRefresh = false) {
+                if (!firebaseInitialized) {
+                    console.log("Firebase no está inicializado, cargando desde localStorage");
+                    const savedData = localStorage.getItem('schoolData');
+                    if (savedData) {
+                        schoolData = JSON.parse(savedData);
+                        updateNextAvailableNumber();
+                        
+                        // Si hay un curso guardado en localStorage, seleccionarlo
+                        const lastCourse = localStorage.getItem('lastSelectedCourse');
+                        if (lastCourse) {
+                            currentCourse = lastCourse;
+                        }
+                        
+                        updateCourseUI();
+                    }
+                    return;
+                }
+                
+                showSyncMessage("Cargando datos...", "loading");
+                
+                // Usar once para cargar datos una vez o on para escuchar cambios continuamente
+                const method = forceRefresh ? 'once' : 'once';
+                
+                database.ref('schoolData')[method]('value')
+                    .then((snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            schoolData = data;
+                            updateNextAvailableNumber();
+                            showSyncMessage("Datos cargados correctamente", "success");
+                            
+                            // Si hay un curso guardado en localStorage, seleccionarlo
+                            const lastCourse = localStorage.getItem('lastSelectedCourse');
+                            if (lastCourse) {
+                                currentCourse = lastCourse;
+                            }
+                            
+                            updateCourseUI();
+                            
+                            // Guardar en localStorage como respaldo
+                            localStorage.setItem('schoolData', JSON.stringify(schoolData));
+                        } else {
+                            showSyncMessage("No hay datos previos", "success");
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Error al cargar desde Firebase:", error);
+                        showSyncMessage("Error al cargar datos. Usando datos locales.", "error");
+                        
+                        // Intentar cargar desde localStorage como respaldo
+                        const savedData = localStorage.getItem('schoolData');
+                        if (savedData) {
+                            schoolData = JSON.parse(savedData);
+                            updateNextAvailableNumber();
+                            
+                            // Si hay un curso guardado en localStorage, seleccionarlo
+                            const lastCourse = localStorage.getItem('lastSelectedCourse');
+                            if (lastCourse) {
+                                currentCourse = lastCourse;
+                            }
+                            
+                            updateCourseUI();
+                        }
+                    });
+            }
+            
+            // Función para escuchar cambios en tiempo real desde Firebase
+            function listenForChanges() {
+                if (!firebaseInitialized) return;
+                
+                database.ref('schoolData').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        // Marcar que estamos actualizando desde Firebase para evitar bucles
+                        updatingFromFirebase = true;
+                        
+                        // Actualizar los datos locales
+                        schoolData = data;
+                        updateNextAvailableNumber();
+                        
+                        // Actualizar la UI si hay un curso seleccionado
+                        if (currentCourse) {
+                            updateCourseUI();
+                        }
+                        
+                        // Guardar en localStorage como respaldo
+                        localStorage.setItem('schoolData', JSON.stringify(schoolData));
+                        
+                        // Mostrar mensaje de sincronización
+                        showSyncMessage("Datos actualizados desde otro dispositivo", "success");
+                        
+                        // Desmarcar la actualización
+                        setTimeout(() => {
+                            updatingFromFirebase = false;
+                        }, 100);
+                    }
+                });
+            }
+            
+            // Función para verificar si un número ya está asignado en cualquier curso
+            function isNumberAssigned(number, excludeStudentIndex = -1, excludeCourse = null) {
+                for (const courseCode in schoolData) {
+                    if (excludeCourse && courseCode === excludeCourse) continue;
                     
-                    row.innerHTML = `
-                        <div class="col-span-6 md:col-span-7">${ingredient.name}</div>
-                        <div class="col-span-3 md:col-span-3 text-center">${ingredient.adjustedQuantity} ${ingredient.unit}</div>
-                        <div class="col-span-3 md:col-span-2 text-center no-print">
-                            <input type="checkbox" class="w-5 h-5 accent-orange-500 cursor-pointer">
-                        </div>
-                    `;
+                    if (schoolData[courseCode] && schoolData[courseCode].students) {
+                        for (let i = 0; i < schoolData[courseCode].students.length; i++) {
+                            if (courseCode === currentCourse && i === excludeStudentIndex) continue;
+                            
+                            if (schoolData[courseCode].students[i].numbers.includes(number)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+            
+            // Función para encontrar el siguiente número disponible en todo el sistema
+            function getNextAvailableNumber() {
+                // Usar la variable global y luego incrementarla
+                const nextNumber = nextAvailableNumberGlobal;
+                return nextNumber;
+            }
+            
+            // Función para actualizar el número global disponible
+            function updateNextAvailableNumber() {
+                let maxNumber = 0;
+                
+                for (const courseCode in schoolData) {
+                    if (schoolData[courseCode] && schoolData[courseCode].students) {
+                        schoolData[courseCode].students.forEach(student => {
+                            student.numbers.forEach(num => {
+                                if (num > maxNumber) {
+                                    maxNumber = num;
+                                }
+                            });
+                        });
+                    }
+                }
+                
+                nextAvailableNumberGlobal = maxNumber + 1;
+            }
+            
+            // Función para actualizar la interfaz de usuario cuando se cambia de curso
+            function updateCourseUI() {
+                // Si no hay curso seleccionado, seleccionar el primero por defecto
+                if (!currentCourse) {
+                    currentCourse = '1P'; // Seleccionar 1º de Primaria por defecto
+                }
+                
+                // Guardar el curso seleccionado en localStorage
+                localStorage.setItem('lastSelectedCourse', currentCourse);
+                
+                // Mostrar panel de curso
+                coursePanel.classList.remove('hidden');
+                
+                // Actualizar el título del panel y el nombre del profesor
+                coursePanelTitle.textContent = `Curso: ${getFullCourseName(currentCourse)}`;
+                
+                if (schoolData[currentCourse]) {
+                    teacherInput.value = schoolData[currentCourse].teacher || 'Sin asignar';
+                } else {
+                    teacherInput.value = 'Sin asignar';
+                }
+                
+                // Actualizar la lista de estudiantes
+                renderStudentsList();
+                
+                // Actualizar la clase activa en los elementos de curso
+                document.querySelectorAll('.course-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                if (currentCourse) {
+                    document.querySelector(`.course-item[data-course="${currentCourse}"]`).classList.add('active');
+                }
+                
+                // Actualizar el número global disponible
+                updateNextAvailableNumber();
+            }
+            
+            // Función para añadir números consecutivos a un estudiante
+            function addConsecutiveNumbers(studentIndex, count) {
+                const student = schoolData[currentCourse].students[studentIndex];
+                const nextNumber = getNextAvailableNumber();
+                
+                // Añadir números consecutivos
+                for (let i = 0; i < count; i++) {
+                    student.numbers.push(nextNumber + i);
+                }
+                
+                // Actualizar el número global disponible
+                nextAvailableNumberGlobal = nextNumber + count;
+                
+                // Ordenar los números
+                student.numbers.sort((a, b) => a - b);
+                
+                saveDataToFirebase();
+                renderStudentsList();
+            }
+            
+            // Función para cambiar el estado de pago de un estudiante
+            function togglePaymentStatus(studentIndex) {
+                // Asegurarse de que el estudiante tiene la propiedad 'paid'
+                if (schoolData[currentCourse].students[studentIndex].paid === undefined) {
+                    schoolData[currentCourse].students[studentIndex].paid = true;
+                } else {
+                    schoolData[currentCourse].students[studentIndex].paid = !schoolData[currentCourse].students[studentIndex].paid;
+                }
+                
+                saveDataToFirebase();
+                renderStudentsList();
+            }
+            
+            // Función para renderizar la lista de estudiantes
+            function renderStudentsList() {
+                if (!schoolData[currentCourse] || !schoolData[currentCourse].students || schoolData[currentCourse].students.length === 0) {
+                    studentsList.innerHTML = '';
+                    emptyMessage.classList.remove('hidden');
+                    return;
+                }
+                
+                emptyMessage.classList.add('hidden');
+                studentsList.innerHTML = '';
+                
+                schoolData[currentCourse].students.forEach((student, index) => {
+                    const row = document.createElement('tr');
+                    row.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
                     
-                    ingredientsList.appendChild(row);
+                    // Crear celdas para el nombre y los números
+                    const nameCell = document.createElement('td');
+                    nameCell.className = 'py-3 px-4 border-b';
+                    nameCell.textContent = student.name;
+                    
+                    const numbersCell = document.createElement('td');
+                    numbersCell.className = 'py-3 px-4 border-b';
+                    
+                    // Contenedor para los números
+                    const numbersContainer = document.createElement('div');
+                    numbersContainer.className = 'flex flex-wrap gap-2';
+                    
+                    // Crear un badge para cada número
+                    student.numbers.forEach(num => {
+                        const numberBadge = document.createElement('div');
+                        // Aplicar clase 'paid-number' si el estudiante ha pagado
+                        numberBadge.className = `number-badge inline-flex items-center justify-center ${student.paid ? 'paid-number' : 'bg-blue-100 text-blue-800'} rounded-full px-3 py-1 font-medium relative`;
+                        
+                        // Número
+                        const numberSpan = document.createElement('span');
+                        numberSpan.textContent = num;
+                        
+                        // Botón para eliminar el número
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'delete-number ml-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs absolute -top-1 -right-1';
+                        deleteBtn.innerHTML = '×';
+                        deleteBtn.setAttribute('data-student-index', index);
+                        deleteBtn.setAttribute('data-number', num);
+                        deleteBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            const studentIndex = parseInt(this.getAttribute('data-student-index'));
+                            const number = parseInt(this.getAttribute('data-number'));
+                            
+                            // Eliminar el número del array
+                            const numberIndex = schoolData[currentCourse].students[studentIndex].numbers.indexOf(number);
+                            if (numberIndex > -1) {
+                                schoolData[currentCourse].students[studentIndex].numbers.splice(numberIndex, 1);
+                                saveDataToFirebase();
+                                renderStudentsList();
+                            }
+                        });
+                        
+                        numberBadge.appendChild(numberSpan);
+                        numberBadge.appendChild(deleteBtn);
+                        numbersContainer.appendChild(numberBadge);
+                    });
+                    
+                    // Añadir botón para agregar número
+                    const addNumberBadge = document.createElement('div');
+                    addNumberBadge.className = 'inline-flex items-center justify-center bg-green-100 text-green-800 rounded-full px-3 py-1 font-medium cursor-pointer hover:bg-green-200';
+                    addNumberBadge.innerHTML = '+';
+                    addNumberBadge.setAttribute('data-student-index', index);
+                    addNumberBadge.addEventListener('click', function() {
+                        const studentIndex = parseInt(this.getAttribute('data-student-index'));
+                        const student = schoolData[currentCourse].students[studentIndex];
+                        
+                        // Encontrar el siguiente número disponible
+                        const nextNumber = getNextAvailableNumber();
+                        
+                        // Añadir el número
+                        student.numbers.push(nextNumber);
+                        nextAvailableNumberGlobal = nextNumber + 1;
+                        student.numbers.sort((a, b) => a - b); // Ordenar números
+                        saveDataToFirebase();
+                        renderStudentsList();
+                    });
+                    
+                    numbersContainer.appendChild(addNumberBadge);
+                    numbersCell.appendChild(numbersContainer);
+                    
+                    // Celda para el estado de pago
+                    const statusCell = document.createElement('td');
+                    statusCell.className = 'py-3 px-4 border-b text-center';
+                    
+                    // Botón para cambiar el estado de pago
+                    const paymentBtn = document.createElement('button');
+                    if (student.paid) {
+                        paymentBtn.className = 'paid-badge px-4 py-2 rounded-full text-sm font-medium';
+                        paymentBtn.textContent = 'Pagado';
+                    } else {
+                        paymentBtn.className = 'unpaid-badge px-4 py-2 rounded-full text-sm font-medium';
+                        paymentBtn.textContent = 'Pendiente';
+                    }
+                    paymentBtn.setAttribute('data-index', index);
+                    paymentBtn.addEventListener('click', function() {
+                        const studentIndex = parseInt(this.getAttribute('data-index'));
+                        togglePaymentStatus(studentIndex);
+                    });
+                    
+                    statusCell.appendChild(paymentBtn);
+                    
+                    // Celda para las acciones
+                    const actionsCell = document.createElement('td');
+                    actionsCell.className = 'py-3 px-4 border-b text-center';
+                    
+                    // Botón para añadir 5 números consecutivos
+                    const addFiveBtn = document.createElement('button');
+                    addFiveBtn.className = 'px-3 py-1 mr-2 btn-add-five text-white text-sm font-medium rounded hover:bg-green-700 transition-colors';
+                    addFiveBtn.textContent = 'Añadir 5 números';
+                    addFiveBtn.setAttribute('data-index', index);
+                    addFiveBtn.addEventListener('click', function() {
+                        const studentIndex = parseInt(this.getAttribute('data-index'));
+                        addConsecutiveNumbers(studentIndex, 5);
+                    });
+                    
+                    // Botón para eliminar estudiante
+                    const deleteStudentBtn = document.createElement('button');
+                    deleteStudentBtn.className = 'px-3 py-1 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 transition-colors';
+                    deleteStudentBtn.textContent = 'Eliminar';
+                    deleteStudentBtn.setAttribute('data-index', index);
+                    deleteStudentBtn.addEventListener('click', function() {
+                        const studentIndex = parseInt(this.getAttribute('data-index'));
+                        schoolData[currentCourse].students.splice(studentIndex, 1);
+                        saveDataToFirebase();
+                        renderStudentsList();
+                    });
+                    
+                    actionsCell.appendChild(addFiveBtn);
+                    actionsCell.appendChild(deleteStudentBtn);
+                    
+                    // Añadir celdas a la fila
+                    row.appendChild(nameCell);
+                    row.appendChild(numbersCell);
+                    row.appendChild(statusCell);
+                    row.appendChild(actionsCell);
+                    
+                    // Añadir fila a la tabla
+                    studentsList.appendChild(row);
+                });
+            }
+            
+            // Función para mostrar el modal de configuración
+            function showSetupModal(courseCode) {
+                modalTitle.textContent = `Configurar ${getFullCourseName(courseCode)}`;
+                pendingCourseChange = courseCode;
+                
+                // Reiniciar el proceso de configuración
+                currentStep = 1;
+                totalStudents = 0;
+                currentStudentIndex = 0;
+                tempStudents = [];
+                
+                // Actualizar el número global disponible
+                updateNextAvailableNumber();
+                
+                // Mostrar el paso 1
+                updateModalStep();
+                
+                // Mostrar el modal
+                setupModal.style.display = 'flex';
+            }
+            
+            // Función para ocultar el modal
+            function hideModal() {
+                setupModal.style.display = 'none';
+                pendingCourseChange = null;
+            }
+            
+            // Función para actualizar el paso actual del modal
+            function updateModalStep() {
+                // Ocultar todos los contenidos
+                step1Content.classList.add('hidden');
+                step2Content.classList.add('hidden');
+                step3Content.classList.add('hidden');
+                
+                // Actualizar las clases de los pasos
+                step1.className = 'step';
+                step2.className = 'step';
+                step3.className = 'step';
+                
+                // Mostrar el contenido del paso actual
+                if (currentStep === 1) {
+                    step1Content.classList.remove('hidden');
+                    step1.className = 'step active';
+                    progressBarFill.style.width = '33%';
+                    backButton.classList.add('hidden');
+                    nextButton.textContent = 'Siguiente';
+                } else if (currentStep === 2) {
+                    step2Content.classList.remove('hidden');
+                    step1.className = 'step completed';
+                    step2.className = 'step active';
+                    progressBarFill.style.width = '66%';
+                    backButton.classList.remove('hidden');
+                    nextButton.textContent = 'Siguiente';
+                    
+                    // Actualizar el número del estudiante actual
+                    currentStudentNumber.textContent = currentStudentIndex + 1;
+                    studentNameInput2.value = '';
+                    studentNameInput2.focus();
+                } else if (currentStep === 3) {
+                    step3Content.classList.remove('hidden');
+                    step1.className = 'step completed';
+                    step2.className = 'step completed';
+                    step3.className = 'step active';
+                    progressBarFill.style.width = '100%';
+                    backButton.classList.remove('hidden');
+                    
+                    // Si es el último estudiante, cambiar el texto del botón
+                    if (currentStudentIndex === totalStudents - 1) {
+                        nextButton.textContent = 'Finalizar';
+                    } else {
+                        nextButton.textContent = 'Siguiente';
+                    }
+                    
+                    // Actualizar el nombre del estudiante actual
+                    currentStudentName.textContent = tempStudents[currentStudentIndex].name;
+                    studentNumbersCount.value = '5';
+                    studentNumbersCount.focus();
+                }
+            }
+            
+            // Función para avanzar al siguiente paso
+            function nextStep() {
+                if (currentStep === 1) {
+                    // Validar el número de estudiantes
+                    const count = parseInt(studentsCount.value);
+                    if (isNaN(count) || count < 1) {
+                        alert('Por favor, ingrese un número válido de estudiantes.');
+                        return;
+                    }
+                    
+                    totalStudents = count;
+                    currentStep = 2;
+                    updateModalStep();
+                } else if (currentStep === 2) {
+                    // Validar el nombre del estudiante
+                    const name = studentNameInput2.value.trim();
+                    if (!name) {
+                        alert('Por favor, ingrese el nombre del estudiante.');
+                        return;
+                    }
+                    
+                    // Guardar el nombre del estudiante
+                    if (currentStudentIndex >= tempStudents.length) {
+                        tempStudents.push({ name: name, numbers: [], paid: false });
+                    } else {
+                        tempStudents[currentStudentIndex].name = name;
+                    }
+                    
+                    currentStep = 3;
+                    updateModalStep();
+                } else if (currentStep === 3) {
+                    // Validar el número de números
+                    const count = parseInt(studentNumbersCount.value);
+                    if (isNaN(count) || count < 1) {
+                        alert('Por favor, ingrese un número válido de números (mínimo 1).');
+                        return;
+                    }
+                    
+                    // Asignar los números al estudiante
+                    const nextNumber = getNextAvailableNumber();
+                    const numbers = [];
+                    for (let i = 0; i < count; i++) {
+                        numbers.push(nextNumber + i);
+                    }
+                    
+                    // Actualizar el número global disponible
+                    nextAvailableNumberGlobal = nextNumber + count;
+                    
+                    tempStudents[currentStudentIndex].numbers = numbers;
+                    
+                    // Si es el último estudiante, finalizar el proceso
+                    if (currentStudentIndex === totalStudents - 1) {
+                        finishSetup();
+                    } else {
+                        // Pasar al siguiente estudiante
+                        currentStudentIndex++;
+                        currentStep = 2;
+                        updateModalStep();
+                    }
+                }
+            }
+            
+            // Función para retroceder al paso anterior
+            function previousStep() {
+                if (currentStep === 2) {
+                    currentStep = 1;
+                } else if (currentStep === 3) {
+                    currentStep = 2;
+                }
+                updateModalStep();
+            }
+            
+            // Función para finalizar la configuración
+            function finishSetup() {
+                // Crear el curso con los estudiantes configurados
+                schoolData[pendingCourseChange] = {
+                    teacher: `Profesor de ${getFullCourseName(pendingCourseChange)}`,
+                    students: tempStudents
+                };
+                
+                saveDataToFirebase();
+                
+                // Cambiar al nuevo curso
+                currentCourse = pendingCourseChange;
+                updateCourseUI();
+                
+                // Ocultar el modal
+                hideModal();
+            }
+            
+            // Función para eliminar todos los datos
+            function resetAllData() {
+                // Reiniciar el objeto de datos
+                schoolData = {};
+                
+                // Reiniciar el número global disponible
+                nextAvailableNumberGlobal = 1;
+                
+                // Guardar los datos vacíos
+                if (firebaseInitialized) {
+                    database.ref('schoolData').set({})
+                        .then(() => {
+                            console.log("Todos los datos han sido eliminados");
+                            showSyncMessage("Todos los datos han sido eliminados", "success");
+                        })
+                        .catch((error) => {
+                            console.error("Error al eliminar datos:", error);
+                            showSyncMessage("Error al eliminar datos", "error");
+                        });
+                } else {
+                    localStorage.setItem('schoolData', JSON.stringify({}));
+                    showSyncMessage("Todos los datos han sido eliminados localmente", "success");
+                }
+                
+                // Reiniciar la UI
+                currentCourse = '1P'; // Seleccionar 1º de Primaria por defecto
+                localStorage.setItem('lastSelectedCourse', currentCourse);
+                updateCourseUI();
+                
+                // Ocultar el modal de confirmación
+                confirmModal.style.display = 'none';
+            }
+            
+            // Event listener para el campo de profesor
+            teacherInput.addEventListener('change', function() {
+                const teacherName = this.value.trim();
+                if (!schoolData[currentCourse]) {
+                    schoolData[currentCourse] = {
+                        teacher: teacherName,
+                        students: []
+                    };
+                } else {
+                    schoolData[currentCourse].teacher = teacherName;
+                }
+                saveDataToFirebase();
+            });
+            
+            // Event listener para añadir un estudiante
+            addStudentBtn.addEventListener('click', function() {
+                const name = studentNameInput.value.trim();
+                const numbersCount = parseInt(studentNumbersInput.value);
+                
+                if (!name) {
+                    alert('Por favor, ingrese el nombre del estudiante.');
+                    return;
+                }
+                
+                if (isNaN(numbersCount) || numbersCount < 1) {
+                    alert('Por favor, ingrese un número válido de números (mínimo 1).');
+                    return;
+                }
+                
+                // Asignar números consecutivos
+                const nextNumber = getNextAvailableNumber();
+                const numbersArray = [];
+                for (let i = 0; i < numbersCount; i++) {
+                    numbersArray.push(nextNumber + i);
+                }
+                
+                // Actualizar el número global disponible
+                nextAvailableNumberGlobal = nextNumber + numbersCount;
+                
+                // Asegurarse de que el curso actual existe en los datos
+                if (!schoolData[currentCourse]) {
+                    schoolData[currentCourse] = {
+                        teacher: 'Sin asignar',
+                        students: []
+                    };
+                }
+                
+                // Añadir estudiante
+                schoolData[currentCourse].students.push({
+                    name: name,
+                    numbers: numbersArray,
+                    paid: false // Por defecto, no ha pagado
+                });
+                
+                saveDataToFirebase();
+                
+                // Limpiar campos
+                studentNameInput.value = '';
+                studentNumbersInput.value = '';
+                
+                // Actualizar lista
+                renderStudentsList();
+            });
+            
+            // Event listeners para los elementos de curso en los paneles superiores
+            document.querySelectorAll('.course-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const course = this.getAttribute('data-course');
+                    
+                    // Si el curso no existe en los datos o no tiene estudiantes, mostrar el modal
+                    if (!schoolData[course] || !schoolData[course].students || schoolData[course].students.length === 0) {
+                        showSetupModal(course);
+                    } else {
+                        // Si ya existe, simplemente cambiar al curso
+                        currentCourse = course;
+                        updateCourseUI();
+                    }
                 });
             });
-        }
-
-        // Event listeners
-        decreaseBtn.addEventListener('click', () => {
-            if (parseInt(servingsInput.value) > 1) {
-                servingsInput.value = parseInt(servingsInput.value) - 1;
-                updateIngredientsList();
+            
+            // Event listener para el botón de cancelar del modal
+            cancelModal.addEventListener('click', function() {
+                hideModal();
+            });
+            
+            // Event listener para el botón de siguiente del modal
+            nextButton.addEventListener('click', function() {
+                nextStep();
+            });
+            
+            // Event listener para el botón de atrás del modal
+            backButton.addEventListener('click', function() {
+                previousStep();
+            });
+            
+            // Event listener para el botón de eliminar todo
+            resetButton.addEventListener('click', function() {
+                confirmModal.style.display = 'flex';
+            });
+            
+            // Event listener para cancelar la eliminación
+            cancelReset.addEventListener('click', function() {
+                confirmModal.style.display = 'none';
+            });
+            
+            // Event listener para confirmar la eliminación
+            confirmReset.addEventListener('click', function() {
+                resetAllData();
+            });
+            
+            // Event listeners para las teclas Enter en los campos del modal
+            studentsCount.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    nextStep();
+                }
+            });
+            
+            studentNameInput2.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    nextStep();
+                }
+            });
+            
+            studentNumbersCount.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    nextStep();
+                }
+            });
+            
+            // Inicializar la aplicación
+            loadDataFromFirebase();
+            listenForChanges();
+            
+            // Mostrar mensaje de conexión
+            if (firebaseInitialized) {
+                showSyncMessage("Conectado. Los cambios se sincronizan automáticamente.", "success");
+            } else {
+                showSyncMessage("Modo sin conexión. Los cambios se guardarán localmente.", "error");
             }
+            
+            // Detectar cuando la aplicación se pone online/offline
+            window.addEventListener('online', function() {
+                if (firebaseInitialized) {
+                    showSyncMessage("Conexión restablecida. Sincronizando...", "loading");
+                    saveDataToFirebase(); // Sincronizar datos locales con Firebase
+                }
+            });
+            
+            window.addEventListener('offline', function() {
+                showSyncMessage("Sin conexión. Los cambios se guardarán localmente.", "error");
+            });
+            
+            // Actualizar datos cada 30 segundos para mantener sincronización
+            setInterval(function() {
+                if (firebaseInitialized && navigator.onLine) {
+                    loadDataFromFirebase(true);
+                }
+            }, 30000);
         });
-
-        increaseBtn.addEventListener('click', () => {
-            servingsInput.value = parseInt(servingsInput.value) + 1;
-            updateIngredientsList();
-        });
-
-        servingsInput.addEventListener('change', () => {
-            if (parseInt(servingsInput.value) < 1) {
-                servingsInput.value = 1;
-            }
-            updateIngredientsList();
-        });
-
-        printButton.addEventListener('click', () => {
-            window.print();
-        });
-
-        // Inicializar la lista
-        updateIngredientsList();
     </script>
 </body>
 </html>
