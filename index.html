@@ -335,7 +335,7 @@
         </div>
         
         <!-- Panel de curso (se muestra cuando hay un curso seleccionado) -->
-        <div id="coursePanel" class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div id="coursePanel" class="bg-white rounded-lg shadow-md p-6 mb-8 hidden">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-semibold" id="coursePanelTitle">Curso: 1º de Primaria</h2>
                 <div class="teacher-container flex items-center">
@@ -644,10 +644,8 @@
                         // Si hay un curso guardado en localStorage, seleccionarlo
                         const lastCourse = localStorage.getItem('lastSelectedCourse');
                         if (lastCourse) {
-                            currentCourse = lastCourse;
+                            selectCourse(lastCourse);
                         }
-                        
-                        updateCourseUI();
                     }
                     return;
                 }
@@ -668,10 +666,8 @@
                             // Si hay un curso guardado en localStorage, seleccionarlo
                             const lastCourse = localStorage.getItem('lastSelectedCourse');
                             if (lastCourse) {
-                                currentCourse = lastCourse;
+                                selectCourse(lastCourse);
                             }
-                            
-                            updateCourseUI();
                             
                             // Guardar en localStorage como respaldo
                             localStorage.setItem('schoolData', JSON.stringify(schoolData));
@@ -692,10 +688,8 @@
                             // Si hay un curso guardado en localStorage, seleccionarlo
                             const lastCourse = localStorage.getItem('lastSelectedCourse');
                             if (lastCourse) {
-                                currentCourse = lastCourse;
+                                selectCourse(lastCourse);
                             }
-                            
-                            updateCourseUI();
                         }
                     });
             }
@@ -777,11 +771,18 @@
                 nextAvailableNumberGlobal = maxNumber + 1;
             }
             
+            // Función para seleccionar un curso
+            function selectCourse(courseCode) {
+                currentCourse = courseCode;
+                updateCourseUI();
+            }
+            
             // Función para actualizar la interfaz de usuario cuando se cambia de curso
             function updateCourseUI() {
-                // Si no hay curso seleccionado, seleccionar el primero por defecto
                 if (!currentCourse) {
-                    currentCourse = '1P'; // Seleccionar 1º de Primaria por defecto
+                    // Si no hay curso seleccionado, ocultar el panel
+                    coursePanel.classList.add('hidden');
+                    return;
                 }
                 
                 // Guardar el curso seleccionado en localStorage
@@ -1188,10 +1189,15 @@
                     showSyncMessage("Todos los datos han sido eliminados localmente", "success");
                 }
                 
-                // Reiniciar la UI
-                currentCourse = '1P'; // Seleccionar 1º de Primaria por defecto
-                localStorage.setItem('lastSelectedCourse', currentCourse);
-                updateCourseUI();
+                // Ocultar el panel de curso
+                coursePanel.classList.add('hidden');
+                currentCourse = null;
+                localStorage.removeItem('lastSelectedCourse');
+                
+                // Quitar la clase activa de todos los cursos
+                document.querySelectorAll('.course-item').forEach(item => {
+                    item.classList.remove('active');
+                });
                 
                 // Ocultar el modal de confirmación
                 confirmModal.style.display = 'none';
@@ -1271,8 +1277,7 @@
                         showSetupModal(course);
                     } else {
                         // Si ya existe, simplemente cambiar al curso
-                        currentCourse = course;
-                        updateCourseUI();
+                        selectCourse(course);
                     }
                 });
             });
@@ -1357,5 +1362,5 @@
             }, 30000);
         });
     </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97497632a0b12147',t:'MTc1NjEwNzg0MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
