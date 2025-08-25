@@ -1361,51 +1361,67 @@
                 }
             }, 30000);
         });
-        <html>
+      <html>
 <head>
-  <title>Mi app con Supabase</title>
+  <meta charset="UTF-8">
+  <title>Mi App con Supabase</title>
 </head>
 <body>
   <h1>Notas</h1>
-  <input id="nota" placeholder="Escribe algo..." />
+  <input id="nota" placeholder="Escribe algo...">
   <button onclick="guardar()">Guardar</button>
   <ul id="lista"></ul>
 
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-    const supabaseUrl = "https://TU_PROYECTO.supabase.co";
-    const supabaseAnonKey = "TU_ANON_KEY";
+    // Conexión a tu proyecto Supabase
+    const supabaseUrl = "https://frwyfaeofgzlrlocerlc.supabase.co";
+    const supabaseAnonKey = "TU_ANON_KEY"; // ← reemplaza por tu anon public key
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+    // Función para guardar nota
     async function guardar() {
       const input = document.getElementById("nota");
-      let { error } = await supabase
+      if (!input.value) return;
+
+      const { data, error } = await supabase
         .from("items")
         .insert([{ title: input.value }]);
 
-      if (error) console.error(error);
+      if (error) {
+        console.error("Error guardando:", error);
+      }
+
       input.value = "";
       cargar();
     }
 
+    // Función para cargar notas
     async function cargar() {
-      let { data, error } = await supabase
+      const { data, error } = await supabase
         .from("items")
         .select("*")
         .order("id", { ascending: false });
 
+      if (error) {
+        console.error("Error cargando:", error);
+        return;
+      }
+
       const lista = document.getElementById("lista");
       lista.innerHTML = "";
       data.forEach(item => {
-        let li = document.createElement("li");
+        const li = document.createElement("li");
         li.textContent = item.title;
         lista.appendChild(li);
       });
     }
 
-    cargar(); // carga al iniciar
+    // Cargar notas al iniciar
+    cargar();
     </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97497632a0b12147',t:'MTc1NjEwNzg0MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+
 
