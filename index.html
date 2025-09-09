@@ -48,6 +48,8 @@
           <li class="course-item p-2 rounded-md" data-course="2E">2º de ESO</li>
           <li class="course-item p-2 rounded-md" data-course="3E">3º de ESO</li>
           <li class="course-item p-2 rounded-md" data-course="4E">4º de ESO</li>
+          <li class="course-item p-2 rounded-md" data-course="3EPDC">3º de ESO PDC</li>
+          <li class="course-item p-2 rounded-md" data-course="4EPDC">4º de ESO PDC</li>
         </ul>
       </div>
     </div>
@@ -76,7 +78,7 @@
   </div>
 </div>
 
-<!-- Modal -->
+<!-- Modal alumnos -->
 <div id="studentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
   <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
     <h3 class="text-xl font-semibold mb-4">Añadir alumnos</h3>
@@ -88,6 +90,18 @@
     <div class="flex justify-end mt-4 space-x-2">
       <button id="cancelModal" class="px-4 py-2 bg-gray-500 text-white rounded">Cancelar</button>
       <button id="confirmModal" class="px-4 py-2 bg-blue-600 text-white rounded">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal inicial boletos -->
+<div id="startNumberModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm">
+    <h3 class="text-xl font-semibold mb-4">Configurar boletos</h3>
+    <label class="block mb-2">¿Desde qué número quieres empezar los boletos?</label>
+    <input type="number" id="startNumberInput" min="1" value="1" class="border rounded p-2 w-full">
+    <div class="flex justify-end mt-4">
+      <button id="confirmStartNumber" class="px-4 py-2 bg-blue-600 text-white rounded">Aceptar</button>
     </div>
   </div>
 </div>
@@ -115,6 +129,10 @@
   const cancelModal = document.getElementById("cancelModal");
   const confirmModal = document.getElementById("confirmModal");
 
+  const startNumberModal = document.getElementById("startNumberModal");
+  const startNumberInput = document.getElementById("startNumberInput");
+  const confirmStartNumber = document.getElementById("confirmStartNumber");
+
   function renderStudentsList() {
     studentsList.innerHTML = "";
     if (!schoolData[currentCourse] || !schoolData[currentCourse].students) return;
@@ -138,9 +156,17 @@
   function selectCourse(course) {
     currentCourse = course;
     if (!schoolData[course]) schoolData[course] = { teacher: "", students: [] };
-    studentModal.classList.remove("hidden");
-    numStudentsInput.value = "";
-    studentsForm.innerHTML = "";
+
+    if (schoolData[course].students.length === 0) {
+      studentModal.classList.remove("hidden");
+      numStudentsInput.value = "";
+      studentsForm.innerHTML = "";
+    } else {
+      coursePanel.classList.remove("hidden");
+      coursePanelTitle.textContent = `Curso: ${currentCourse}`;
+      teacherInput.value = schoolData[currentCourse].teacher || "";
+      renderStudentsList();
+    }
   }
 
   // Eventos cursos
@@ -170,10 +196,12 @@
     studentsForm.innerHTML = "";
     for(let i=0; i<count; i++){
       const div = document.createElement("div");
-      div.className = "grid grid-cols-2 gap-2";
+      div.className = "grid grid-cols-1 gap-2 border p-2 rounded";
       div.innerHTML = `
-        <input type="text" placeholder="Nombre alumno ${i+1}" class="border p-2 rounded" data-name>
-        <input type="number" placeholder="Números" class="border p-2 rounded" min="1" value="1" data-nums>
+        <label class="block">Nombre del alumno</label>
+        <input type="text" placeholder="Nombre alumno ${i+1}" class="border p-2 rounded w-full" data-name>
+        <label class="block mt-2">Número de boletos</label>
+        <input type="number" placeholder="Cantidad" class="border p-2 rounded w-full" min="1" value="1" data-nums>
       `;
       studentsForm.appendChild(div);
     }
@@ -223,8 +251,15 @@
     }
   });
 
+  confirmStartNumber.addEventListener("click", () => {
+    const start = parseInt(startNumberInput.value) || 1;
+    schoolData._nextNum = start;
+    startNumberModal.classList.add("hidden");
+  });
+
   async function loadData(){
-    const {data, error} = await supabase.from("listas").select("contenido").eq("id",1).single();
+    const {data, error} = await supabase.from("listas").select("contenido").eq("id",1).maybeSingle();
+
     if(error){
       console.error("Error cargando Supabase:", error);
       saveStatus.textContent = "Error al cargar Supabase";
@@ -232,10 +267,11 @@
       return;
     }
 
-    if(data && data.contenido){
+    if(data && data.contenido && data.contenido.trim() !== ""){
       schoolData = JSON.parse(data.contenido);
     } else {
       console.log("No hay datos en Supabase todavía");
+      startNumberModal.classList.remove("hidden");
     }
   }
 
