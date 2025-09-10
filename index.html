@@ -128,6 +128,7 @@ const supabase = createClient(
 let schoolData = {};
 let currentCourse = null;
 
+// UI
 const studentsList = document.getElementById("studentsList");
 const teacherInput = document.getElementById("teacherInput");
 const coursePanel = document.getElementById("coursePanel");
@@ -135,7 +136,24 @@ const coursePanelTitle = document.getElementById("coursePanelTitle");
 const saveBtn = document.getElementById("saveBtn");
 const saveStatus = document.getElementById("saveStatus");
 
-// Render alumnos con chips de números
+// Modales
+const studentModal = document.getElementById("studentModal");
+const numStudentsInput = document.getElementById("numStudents");
+const studentsForm = document.getElementById("studentsForm");
+const excelInput = document.getElementById("excelInput");
+const cancelModal = document.getElementById("cancelModal");
+const confirmModal = document.getElementById("confirmModal");
+
+const startNumberModal = document.getElementById("startNumberModal");
+const startNumberInput = document.getElementById("startNumberInput");
+const confirmStartNumber = document.getElementById("confirmStartNumber");
+
+const deleteAllBtn = document.getElementById("deleteAllBtn");
+const confirmDeleteModal = document.getElementById("confirmDeleteModal");
+const cancelDelete = document.getElementById("cancelDelete");
+const confirmDelete = document.getElementById("confirmDelete");
+
+// Helpers
 function renderStudentsList() {
   studentsList.innerHTML = "";
   if (!currentCourse || !schoolData[currentCourse]) return;
@@ -158,13 +176,12 @@ function renderStudentsList() {
       </td>
       <td class="p-2">
         <button data-del="${i}" class="bg-red-600 text-white px-2 py-1 rounded">Eliminar</button>
-      </td>
-    `;
+      </td>`;
     studentsList.appendChild(tr);
   });
 }
 
-// Eventos en lista de alumnos
+// Eventos lista alumnos
 studentsList.addEventListener("click", (e) => {
   if (e.target.dataset.delnum) {
     const [si, ni] = e.target.dataset.delnum.split("-").map(Number);
@@ -177,7 +194,7 @@ studentsList.addEventListener("click", (e) => {
     const count = parseInt(prompt("¿Cuántos boletos extra?")) || 0;
     if (count > 0) {
       const start = schoolData._nextNum || 1;
-      const nums = Array.from({length:count},(_,j)=>start+j);
+      const nums = Array.from({ length: count }, (_, j) => start + j);
       schoolData._nextNum = start + count;
       schoolData[currentCourse].students[si].numbers.push(...nums);
       renderStudentsList();
@@ -198,13 +215,13 @@ studentsList.addEventListener("click", (e) => {
   }
 });
 
-// Selección de curso
+// Seleccionar curso
 document.querySelectorAll(".course-item").forEach(el => {
   el.addEventListener("click", () => {
     currentCourse = el.dataset.course;
-    if (!schoolData[currentCourse]) schoolData[currentCourse] = { teacher:"", students:[] };
+    if (!schoolData[currentCourse]) schoolData[currentCourse] = { teacher: "", students: [] };
     if (schoolData[currentCourse].students.length === 0) {
-      document.getElementById("studentModal").classList.remove("hidden");
+      studentModal.classList.remove("hidden");
     } else {
       coursePanel.classList.remove("hidden");
       coursePanelTitle.textContent = `Curso: ${currentCourse}`;
@@ -214,20 +231,95 @@ document.querySelectorAll(".course-item").forEach(el => {
   });
 });
 
+// Modal alumnos
+numStudentsInput.addEventListener("change", () => {
+  const count = parseInt(numStudentsInput.value) || 0;
+  studentsForm.innerHTML = "";
+  for (let i = 0; i < count; i++) {
+    studentsForm.innerHTML += `
+      <div class="grid grid-cols-1 gap-2 border p-2 rounded">
+        <label>Nombre del alumno</label>
+        <input data-name type="text" class="border p-2 rounded w-full" placeholder="Alumno ${i+1}">
+        <label>Número de boletos</label>
+        <input data-nums type="number" class="border p-2 rounded w-full" min="1" value="1">
+      </div>`;
+  }
+});
+
+excelInput.addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const data = await file.arrayBuffer();
+  const wb = XLSX.read(data);
+  const sheet = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+  studentsForm.innerHTML = "";
+  rows.forEach((r, i) => {
+    if (!r[0]) return;
+    const tickets = r[1] ? parseInt(r[1]) : 10;
+    studentsForm.innerHTML += `
+      <div class="grid grid-cols-1 gap-2 border p-2 rounded">
+        <label>Nombre del alumno</label>
+        <input data-name type="text" class="border p-2 rounded w-full" value="${r[0]}">
+        <label>Número de boletos</label>
+        <input data-nums type="number" class="border p-2 rounded w-full" min="1" value="${tickets}">
+      </div>`;
+  });
+});
+
+cancelModal.addEventListener("click", () => {
+  studentModal.classList.add("hidden");
+});
+
+confirmModal.addEventListener("click", () => {
+  const blocks = studentsForm.querySelectorAll("div");
+  if (!schoolData[currentCourse]) schoolData[currentCourse] = { teacher: "", students: [] };
+  blocks.forEach(div => {
+    const name = div.querySelector("[data-name]").value.trim();
+    const count = parseInt(div.querySelector("[data-nums]").value) || 1;
+    if (name) {
+      const start = schoolData._nextNum || 1;
+      const nums = Array.from({ length: count }, (_, j) => start + j);
+      schoolData._nextNum = start + count;
+      schoolData[currentCourse].students.push({ name, numbers: nums, paid: false });
+    }
+  });
+  studentModal.classList.add("hidden");
+  coursePanel.classList.remove("hidden");
+  coursePanelTitle.textContent = `Curso: ${currentCourse}`;
+  renderStudentsList();
+});
+
+// Modal inicio boletos
+confirmStartNumber.addEventListener("click", () => {
+  const start = parseInt(startNumberInput.value) || 1;
+  schoolData._nextNum = start;
+  startNumberModal.classList.add("hidden");
+});
+
+// Modal borrar todo
+deleteAllBtn.addEventListener("click", () => confirmDeleteModal.classList.remove("hidden"));
+cancelDelete.addEventListener("click", () => confirmDeleteModal.classList.add("hidden"));
+confirmDelete.addEventListener("click", async () => {
+  await supabase.from("listas").delete().eq("id", 1);
+  schoolData = {};
+  location.reload();
+});
+
 // Guardar
 saveBtn.addEventListener("click", async () => {
   const { error } = await supabase.from("listas").upsert([{ id:1, contenido: JSON.stringify(schoolData) }]);
-  if (error) { saveStatus.textContent="Error"; saveStatus.style.color="red"; }
-  else { saveStatus.textContent="Guardado ✔"; saveStatus.style.color="green"; }
+  if (error) { saveStatus.textContent = "Error"; saveStatus.style.color="red"; }
+  else { saveStatus.textContent = "Guardado ✔"; saveStatus.style.color="green"; }
 });
 
-// Iniciar
-(async function loadData(){
+// Cargar
+(async function loadData() {
   const { data } = await supabase.from("listas").select("contenido").eq("id",1).maybeSingle();
   if (data && data.contenido) {
     schoolData = JSON.parse(data.contenido);
   } else {
-    document.getElementById("startNumberModal").classList.remove("hidden");
+    startNumberModal.classList.remove("hidden");
   }
 })();
 </script>
