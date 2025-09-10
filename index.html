@@ -116,6 +116,19 @@
     </div>
   </div>
 
+  <!-- Modal añadir boletos extra -->
+  <div id="addTicketsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
+    <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm">
+      <h3 class="text-xl font-semibold mb-4">Añadir boletos</h3>
+      <label class="block mb-2">¿Cuántos boletos extra quieres añadir?</label>
+      <input id="extraTicketsInput" type="number" min="1" value="1" class="border rounded p-2 w-full mb-4" />
+      <div class="flex justify-end space-x-2">
+        <button id="cancelAddTickets" class="px-4 py-2 bg-gray-500 text-white rounded">Cancelar</button>
+        <button id="confirmAddTickets" class="px-4 py-2 bg-blue-600 text-white rounded">Añadir</button>
+      </div>
+    </div>
+  </div>
+
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import * as XLSX from "https://cdn.sheetjs.com/xlsx-latest/package/xlsx.mjs";
@@ -152,6 +165,13 @@ const deleteAllBtn = document.getElementById("deleteAllBtn");
 const confirmDeleteModal = document.getElementById("confirmDeleteModal");
 const cancelDelete = document.getElementById("cancelDelete");
 const confirmDelete = document.getElementById("confirmDelete");
+
+// Modal añadir boletos
+const addTicketsModal = document.getElementById("addTicketsModal");
+const extraTicketsInput = document.getElementById("extraTicketsInput");
+const cancelAddTickets = document.getElementById("cancelAddTickets");
+const confirmAddTickets = document.getElementById("confirmAddTickets");
+let addTicketsIndex = null;
 
 // Helpers
 function renderStudentsList() {
@@ -190,15 +210,9 @@ studentsList.addEventListener("click", (e) => {
     return;
   }
   if (e.target.dataset.addnum !== undefined) {
-    const si = parseInt(e.target.dataset.addnum);
-    const count = parseInt(prompt("¿Cuántos boletos extra?")) || 0;
-    if (count > 0) {
-      const start = schoolData._nextNum || 1;
-      const nums = Array.from({ length: count }, (_, j) => start + j);
-      schoolData._nextNum = start + count;
-      schoolData[currentCourse].students[si].numbers.push(...nums);
-      renderStudentsList();
-    }
+    addTicketsIndex = parseInt(e.target.dataset.addnum);
+    extraTicketsInput.value = 1;
+    addTicketsModal.classList.remove("hidden");
     return;
   }
   if (e.target.dataset.idx !== undefined) {
@@ -213,6 +227,26 @@ studentsList.addEventListener("click", (e) => {
     renderStudentsList();
     return;
   }
+});
+
+// Confirmar añadir boletos
+confirmAddTickets.addEventListener("click", () => {
+  const count = parseInt(extraTicketsInput.value) || 0;
+  if (count > 0 && addTicketsIndex !== null) {
+    const start = schoolData._nextNum || 1;
+    const nums = Array.from({ length: count }, (_, j) => start + j);
+    schoolData._nextNum = start + count;
+    schoolData[currentCourse].students[addTicketsIndex].numbers.push(...nums);
+    renderStudentsList();
+  }
+  addTicketsModal.classList.add("hidden");
+  addTicketsIndex = null;
+});
+
+// Cancelar modal añadir
+cancelAddTickets.addEventListener("click", () => {
+  addTicketsModal.classList.add("hidden");
+  addTicketsIndex = null;
 });
 
 // Seleccionar curso
@@ -256,7 +290,7 @@ excelInput.addEventListener("change", async (e) => {
   studentsForm.innerHTML = "";
   rows.forEach((r, i) => {
     if (!r[0]) return;
-    const tickets = r[1] ? parseInt(r[1]) : 10;
+    const tickets = 10; // SIEMPRE 10 boletos
     studentsForm.innerHTML += `
       <div class="grid grid-cols-1 gap-2 border p-2 rounded">
         <label>Nombre del alumno</label>
