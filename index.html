@@ -17,9 +17,10 @@
 <body>
   <div id="app" class="min-h-screen">
     <header class="bg-blue-700 text-white py-6 px-4 shadow-lg">
-      <div class="max-w-7xl mx-auto flex items-center gap-4">
+      <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
         <button id="deleteAllBtn" class="px-3 py-2 bg-red-600 text-white rounded">🗑️ Eliminar todo</button>
-        <h1 class="flex-1 text-center text-2xl md:text-3xl font-bold">RIFA JESÚS MARÍA FUENSANTA</h1>
+        <h1 class="text-2xl md:text-3xl font-bold text-center flex-1">RIFA JESÚS MARÍA FUENSANTA</h1>
+        <img src="cropped-0._CENTROS-EDUCATIVOS-CON-ISOTIPO-PQUENO.png" alt="Logo Jesús María" class="h-12 md:h-14 object-contain" />
       </div>
     </header>
 
@@ -341,11 +342,12 @@ async function saveData(auto = false) {
     saveStatus.textContent = "Error";
     saveStatus.style.color = "red";
   } else {
+    const now = new Date().toLocaleTimeString();
     if (auto) {
-      saveStatus.textContent = "Guardado automático ✔";
+      saveStatus.textContent = `Guardado automático ✔ (${now})`;
       saveStatus.style.color = "gray";
     } else {
-      saveStatus.textContent = "Guardado ✔";
+      saveStatus.textContent = `Guardado ✔ (${now})`;
       saveStatus.style.color = "green";
     }
   }
