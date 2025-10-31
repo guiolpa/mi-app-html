@@ -6,64 +6,111 @@
   <title>RIFA JESÚS MARÍA FUENSANTA</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
   <style>
-    body { font-family: 'Poppins', sans-serif; background-color: #f0f4f8; }
-    .course-item { cursor: pointer; transition: all 0.15s ease; }
-    .course-item:hover { transform: translateY(-2px); }
-    .paid-badge { background-color: #10b981; color: white; }
-    .unpaid-badge { background-color: #f59e0b; color: white; }
+    body { font-family: 'Poppins', sans-serif; }
+    .course-item.active {
+      background-color: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
   </style>
 </head>
-<body>
-  <div id="app" class="min-h-screen">
-    <header class="bg-blue-700 text-white py-6 px-4 shadow-lg">
-      <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
-        <button id="deleteAllBtn" class="px-3 py-2 bg-red-600 text-white rounded">🗑️ Eliminar todo</button>
-        <h1 class="text-2xl md:text-3xl font-bold text-center flex-1">RIFA JESÚS MARÍA FUENSANTA</h1>
-        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKUAAACkCAYAAAD2d+5/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAgAElEQVR4nO2de3wUVf7HP2e7SUKzJ0qgQpEokKkqgq1ESqJpCk9pGgqomk1Zf1i1UQm0G7sK8q3hZqVqgqkqgqVKqgqQqI0qHUPQpV27t7/7v3e7s3P3zszszv7n7r3nPfc7M7szs7c/7f3fN3xJ7kOwQCCGEIIYQghhCCGEEKI4QghhCCGEIIYQghhCCGEIIYQghhCCGEIIYQghhCCGEIIYQghhCCGEEIoYQghhCCGEIIYQghhCCGEEIoYQghhCCGEEIoYQghhCCGEEIoYQghhCCGEEIoYQghhCCGEEIoYQghhCCGEEIoYQghhCCGEb6X3R6f+qf1mX7g3v1Pz8Y1q+Vb+7b7s0gZ7y3+8nP7xP7kI8e8xv3t3s8x5zK3vZg8Q7w8R7v8nG9nG8T5jG8b7v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8cIS6hBH9K6N+PXII/SSSkTNDnkJAyQZ9DQsoEfQ4JKRP0OSSkTNDnkJAyQZ9DQsoEfQ4JKRP0OSSkTNDnkJAyQZ9DQsoEfQ4JKRP0OSSkTNDnkJAyQZ9DQsoEfQ4JKRP0OSSkTNDnkJAyQZ9DQsoEfQ4JKRP0OSSkTNDnkJAyQZ9DQsoEfQ4JKRP0OSSkTNDnkJAyQZ9DQsoEfQ4JKRP0OSSkTNDnkJAyQZ9DQsoEfQ4J6J/SZxHKfYcSXusQ1umCp670ioINQ76n21deo953n/OHdXCwYiOcisV/f3+Ui79V8cIS6hBH9K6N+PXII/SSSkTNDnkJAyQZ9DQsoEfQ4JKRP0OSSkTNDn8P8BadFlR18TjWQAAAAASUVORK5CYII=" alt="Logo Jesús María" class="h-12 md:h-14 object-contain" />
+<body class="bg-gray-100 min-h-screen p-6">
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold text-center mb-8 text-blue-700">🎟️ RIFA JESÚS MARÍA FUENSANTA</h1>
+
+    <!-- Cursos -->
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <!-- Primaria -->
+      <div class="bg-white rounded-lg shadow-md p-5">
+        <h3 class="text-lg font-semibold mb-3 text-blue-700">Primaria</h3>
+        <ul class="space-y-1 text-gray-700">
+          <li class="course-item p-2 rounded-md border cursor-pointer" data-course="1P">1º de Primaria</li>
+          <li class="course-item p-2 rounded-md border cursor-pointer" data-course="2P">2º de Primaria</li>
+          <li class="course-item p-2 rounded-md border cursor-pointer" data-course="3P">3º de Primaria</li>
+          <li class="course-item p-2 rounded-md border cursor-pointer" data-course="4P">4º de Primaria</li>
+          <li class="course-item p-2 rounded-md border cursor-pointer" data-course="5P">5º de Primaria</li>
+          <li class="course-item p-2 rounded-md border cursor-pointer" data-course="6P">6º de Primaria</li>
+        </ul>
       </div>
-    </header>
 
-    <main class="max-w-7xl mx-auto px-4 py-8">
-      <div class="flex justify-end mb-6">
-        <button id="saveBtn" class="px-4 py-2 bg-blue-600 text-white rounded w-full md:w-auto">💾 Guardar</button>
-        <span id="saveStatus" class="ml-3 text-sm"></span>
+      <!-- ESO -->
+      <div class="bg-white rounded-lg shadow-md p-5">
+        <h3 class="text-lg font-semibold mb-3 text-indigo-700">ESO</h3>
+        <ul class="space-y-1 text-gray-700">
+          <li class="course-item p-2 rounded-md border cursor-pointer" data-course="1E">1º de ESO</li>
+          <li class="course-item p-2 rounded-md border cursor-pointer" data-course="2E">2º de ESO</li>
+          <li class="course-item p-2 rounded-md border cursor-pointer" data-course="3E">3º de ESO</li>
+          <li class="course-item p-2 rounded-md border cursor-pointer" data-course="4E">4º de ESO</li>
+          <li class="course-item p-2 rounded-md border cursor-pointer" data-course="3EPDC">3º de ESO PDC</li>
+          <li class="course-item p-2 rounded-md border cursor-pointer" data-course="4EPDC">4º de ESO PDC</li>
+        </ul>
       </div>
 
-          <!-- Cursos -->
-      <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white rounded-lg shadow-md p-5">
-          <h3 class="text-lg font-semibold mb-3 text-blue-700">Primaria</h3>
-          <ul class="space-y-1 text-gray-700">
-            <li class="course-item p-2 rounded-md border" data-course="1P">1º de Primaria</li>
-            <li class="course-item p-2 rounded-md border" data-course="2P">2º de Primaria</li>
-            <li class="course-item p-2 rounded-md border" data-course="3P">3º de Primaria</li>
-            <li class="course-item p-2 rounded-md border" data-course="4P">4º de Primaria</li>
-            <li class="course-item p-2 rounded-md border" data-course="5P">5º de Primaria</li>
-            <li class="course-item p-2 rounded-md border" data-course="6P">6º de Primaria</li>
-          </ul>
-        </div>
+      <!-- Profesores -->
+      <div class="bg-white rounded-lg shadow-md p-5">
+        <h3 class="text-lg font-semibold mb-3 text-green-700">Profesores</h3>
+        <ul class="space-y-1 text-gray-700">
+          <li class="course-item p-2 rounded-md border cursor-pointer" data-course="PROF-PRI">Profesorado Primaria</li>
+          <li class="course-item p-2 rounded-md border cursor-pointer" data-course="PROF-ESO">Profesorado ESO</li>
+          <li class="course-item p-2 rounded-md border cursor-pointer" data-course="PROF-OTROS">Otros Profesores</li>
+        </ul>
+      </div>
+    </section>
 
-        <div class="bg-white rounded-lg shadow-md p-5">
-          <h3 class="text-lg font-semibold mb-3 text-indigo-700">ESO</h3>
-          <ul class="space-y-1 text-gray-700">
-            <li class="course-item p-2 rounded-md border" data-course="1E">1º de ESO</li>
-            <li class="course-item p-2 rounded-md border" data-course="2E">2º de ESO</li>
-            <li class="course-item p-2 rounded-md border" data-course="3E">3º de ESO</li>
-            <li class="course-item p-2 rounded-md border" data-course="4E">4º de ESO</li>
-            <li class="course-item p-2 rounded-md border" data-course="3EPDC">3º de ESO PDC</li>
-            <li class="course-item p-2 rounded-md border" data-course="4EPDC">4º de ESO PDC</li>
-          </ul>
-        </div>
+    <!-- Panel de información -->
+    <div id="panel" class="bg-white rounded-lg shadow-md p-6 text-center text-gray-600">
+      <p>Selecciona un curso o grupo para comenzar.</p>
+    </div>
+  </div>
 
-        <!-- Profesores -->
-        <div class="bg-white rounded-lg shadow-md p-5">
-          <h3 class="text-lg font-semibold mb-3 text-green-700">Profesores</h3>
-          <ul class="space-y-1 text-gray-700">
-            <li class="course-item p-2 rounded-md border" data-course="PROF-PRI">Profesorado Primaria</li>
-            <li class="course-item p-2 rounded-md border" data-course="PROF-ESO">Profesorado ESO</li>
-            <li class="course-item p-2 rounded-md border" data-course="PROF-OTROS">Otros Profesores</li>
-          </ul>
-        </div>
-      </section>
+  <!-- Script principal -->
+  <script>
+    // Inicializa Supabase
+    const SUPABASE_URL = "https://frwyfaeofgzlrlocerlc.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyd3lmYWVvZmd6bHJsb2NlcmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxMDkwNjQsImV4cCI6MjA3MTY4NTA2NH0.EDixTsOIqO5ovagH9ppAAqhLIFHvGVxaSrfStvlyxpY";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    const items = document.querySelectorAll('.course-item');
+    const panel = document.getElementById('panel');
+
+    items.forEach(item => {
+      item.addEventListener('click', async () => {
+        // Quita la selección anterior
+        items.forEach(i => i.classList.remove('active'));
+
+        // Marca el seleccionado
+        item.classList.add('active');
+
+        const courseCode = item.dataset.course;
+        panel.innerHTML = `<p class="text-lg font-semibold text-blue-700">Cargando datos de ${item.textContent}...</p>`;
+
+        // Ejemplo: Cargar datos desde Supabase
+        try {
+          const { data, error } = await supabase
+            .from('alumnos')
+            .select('*')
+            .eq('curso', courseCode);
+
+          if (error) throw error;
+
+          if (data.length === 0) {
+            panel.innerHTML = `<p class="text-gray-600">No hay registros en ${item.textContent}.</p>`;
+          } else {
+            panel.innerHTML = `
+              <h2 class="text-xl font-semibold mb-3 text-blue-700">${item.textContent}</h2>
+              <ul class="text-left space-y-1 text-gray-700">
+                ${data.map(al => `<li>🎟️ ${al.nombre} - Boleto ${al.boleto}</li>`).join('')}
+              </ul>
+            `;
+          }
+        } catch (err) {
+          console.error(err);
+          panel.innerHTML = `<p class="text-red-500">Error al cargar los datos.</p>`;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
