@@ -9,7 +9,7 @@
   <style>
     body { font-family: 'Poppins', sans-serif; background-color: #f0f4f8; }
     .course-item { cursor: pointer; transition: all 0.15s ease; }
-    .course-item:hover { transform: translateY(-2px); }
+    .course-item:hover { transform: scale(1.02); background-color: #e0f2fe; }
   </style>
 </head>
 <body>
@@ -23,6 +23,11 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-8">
+      <!-- Guardar -->
+      <div class="flex justify-end mb-6">
+        <button id="saveBtn" class="px-4 py-2 bg-blue-600 text-white rounded">💾 Guardar</button>
+        <span id="saveStatus" class="ml-3 text-sm text-gray-600"></span>
+      </div>
 
       <!-- 🔍 Buscador -->
       <section class="bg-white rounded-lg shadow-md p-5 mb-8">
@@ -66,6 +71,7 @@
         </ul>
       </div>
 
+      <!-- Panel -->
       <section id="coursePanel" class="bg-white rounded-lg shadow-md p-6 hidden mt-8">
         <h2 id="coursePanelTitle" class="text-xl font-semibold mb-4"></h2>
         <div class="mb-4 flex flex-col md:flex-row md:items-center md:gap-4">
@@ -105,6 +111,72 @@ const coursePanel = document.getElementById("coursePanel");
 const coursePanelTitle = document.getElementById("coursePanelTitle");
 const saveBtn = document.getElementById("saveBtn");
 const deleteAllBtn = document.getElementById("deleteAllBtn");
+
+// === Cargar datos ===
+async function loadData() {
+  const { data, error } = await supabase.from("rifa_datos").select("data").eq("id", 1).single();
+  if (error) {
+    console.error(error);
+    alert("Error cargando datos");
+    return;
+  }
+  schoolData = data.data || {};
+}
+await loadData();
+
+// === Mostrar curso ===
+document.querySelectorAll(".course-item").forEach(el => {
+  el.addEventListener("click", () => openCourse(el.dataset.course));
+});
+
+function openCourse(course) {
+  currentCourse = course;
+  const data = schoolData[course] || { teacher: "", students: [] };
+  teacherInput.value = data.teacher || "";
+  renderStudents(data.students);
+  coursePanelTitle.textContent = `Clase: ${course}`;
+  coursePanel.classList.remove("hidden");
+}
+
+function renderStudents(students = []) {
+  if (!students.length) {
+    studentsList.innerHTML = `<tr><td colspan="3" class="p-3 text-gray-500">Sin alumnos cargados</td></tr>`;
+    return;
+  }
+  studentsList.innerHTML = students.map(s => `
+    <tr>
+      <td class="border p-2">${s.name}</td>
+      <td class="border p-2">${(s.numbers || []).join(", ")}</td>
+      <td class="border p-2">
+        <span class="${s.paid ? "text-green-600" : "text-orange-600"} font-semibold">
+          ${s.paid ? "Pagado" : "Pendiente"}
+        </span>
+      </td>
+    </tr>`).join("");
+}
+
+// === Guardar ===
+saveBtn.addEventListener("click", async () => {
+  if (!currentCourse) return alert("Abre una clase primero.");
+  const teacher = teacherInput.value.trim();
+  schoolData[currentCourse] = { teacher, students: schoolData[currentCourse]?.students || [] };
+
+  const { error } = await supabase.from("rifa_datos").update({ data: schoolData }).eq("id", 1);
+  if (error) {
+    alert("Error guardando los datos.");
+  } else {
+    alert("✅ Datos guardados correctamente.");
+  }
+});
+
+// === Eliminar todo ===
+deleteAllBtn.addEventListener("click", async () => {
+  if (!confirm("¿Seguro que quieres eliminar todos los datos?")) return;
+  await supabase.from("rifa_datos").update({ data: {} }).eq("id", 1);
+  schoolData = {};
+  alert("Datos eliminados.");
+  location.reload();
+});
 
 // === Buscador ===
 const searchNumberInput = document.getElementById("searchNumberInput");
@@ -151,49 +223,6 @@ function searchTicket() {
     searchResult.innerHTML = `<p class="text-red-600">❌ No se encontró ningún alumno con el número ${num}.</p>`;
   }
 }
-
-// === Cargar datos ===
-async function loadData() {
-  const { data } = await supabase.from("rifa_datos").select("data").single();
-  if (data && data.data) schoolData = data.data;
-}
-await loadData();
-
-// === Mostrar curso ===
-document.querySelectorAll(".course-item").forEach(el => {
-  el.addEventListener("click", () => openCourse(el.dataset.course));
-});
-
-function openCourse(course) {
-  currentCourse = course;
-  const data = schoolData[course] || { teacher: "", students: [] };
-  teacherInput.value = data.teacher || "";
-  renderStudents(data.students);
-  coursePanelTitle.textContent = `Clase: ${course}`;
-  coursePanel.classList.remove("hidden");
-}
-
-function renderStudents(students = []) {
-  studentsList.innerHTML = students.map(s => `
-    <tr>
-      <td class="border p-2">${s.name}</td>
-      <td class="border p-2">${s.numbers.join(", ")}</td>
-      <td class="border p-2">
-        <span class="${s.paid ? "text-green-600" : "text-orange-600"} font-semibold">
-          ${s.paid ? "Pagado" : "Pendiente"}
-        </span>
-      </td>
-    </tr>`).join("");
-}
-
-// === Eliminar todo ===
-deleteAllBtn.addEventListener("click", async () => {
-  if (!confirm("¿Seguro que quieres eliminar todos los datos?")) return;
-  await supabase.from("rifa_datos").update({ data: {} }).eq("id", 1);
-  schoolData = {};
-  alert("Datos eliminados.");
-  location.reload();
-});
 </script>
 </body>
 </html>
