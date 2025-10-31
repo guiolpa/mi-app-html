@@ -1,373 +1,197 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>RIFA JESÚS MARÍA FUENSANTA</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rifa Jesús María Fuensanta</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Poppins', sans-serif; background-color: #f0f4f8; }
-    .course-item { cursor: pointer; transition: all 0.12s ease; }
-    .course-item:hover { transform: translateY(-2px); background: rgba(0,0,0,0.02); }
-    .paid-badge { background-color: #10b981; color: white; }
-    .unpaid-badge { background-color: #f59e0b; color: white; }
-  </style>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
-<body>
-  <div id="app" class="min-h-screen">
-    <header class="bg-blue-700 text-white py-6 px-4 shadow-lg">
-      <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
-        <button id="deleteAllBtn" class="px-3 py-2 bg-red-600 text-white rounded">🗑️ Eliminar todo</button>
-        <h1 class="text-2xl md:text-3xl font-bold text-center flex-1">RIFA JESÚS MARÍA FUENSANTA</h1>
-        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKUAAACkCAYAAAD2d+5/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAgAElEQVR4nO2de3wUVf7HP2e7SUKzJ0qgQpEokKkqgq1ESqJpCk9pGgqomk1Zf1i1UQm0G7sK8q3hZqVqgqkqgqVKqgqQqI0qHUPQpV27t7/7v3e7s3P3zszszv7n7r3nPfc7M7szs7c/7f3fN3xJ7kOwQCCGEIIYQghhCCGEEKI4QghhCCGEIIYQghhCCGEIIYQghhCCGEIIYQghhCCGEIIYQghhCCGEEIoYQghhCCGEIIYQghhCCGEEIoYQghhCCGEEIoYQghhCCGEEIoYQghhCCGEEIoYQghhCCGEEIoYQghhCCGEEIoYQghhCCGEb6X3R6f+qf1mX7g3v1Pz8Y1q+Vb+7b7s0gZ7y3+8nP7xP7kI8e8xv3t3s8x5zK3vZg8Q7w8R7v8nG9nG8T5jG8b7v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8x3v8cIS6hBH9K6N+PXII/SSSkTNDnkJAyQZ9DQsoEfQ4JKRP0OSSkTNDnkJAyQZ9DQsoEfQ4JKRP0OSSkTNDnkJAyQZ9DQsoEfQ4JKRP0OSSkTNDnkJAyQZ9DQsoEfQ4JKRP0OSSkTNDnkJAyQZ9DQsoEfQ4JKRP0OSSkTNDnkJAyQZ9DQsoEfQ4J6J/SZxHKfYcSXusQ1umCp670ioINQ76n21deo953n/OHdXCwYiOcisV/f3+Ui79V8cIS6hBH9K6N+PXII/SSSkTNDnkJAyQZ9DQsoEfQ4JKRP0OSSkTNDn8P8BadFlR18TjWQAAAAASUVORK5CYII=" alt="Logo Jesús María" class="h-12 md:h-14 object-contain" />
-      </div>
-    </header>
 
-    <main class="max-w-7xl mx-auto px-4 py-8">
-      <div class="flex justify-end mb-6 gap-3">
-        <button id="saveBtn" class="px-4 py-2 bg-blue-600 text-white rounded">💾 Guardar</button>
-        <span id="saveStatus" class="ml-3 text-sm"></span>
-      </div>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+  <h1 class="text-3xl font-bold mb-4 text-center text-blue-700">RIFA JESÚS MARÍA FUENSANTA</h1>
 
-      <!-- Buscador -->
-      <section class="bg-white rounded-lg shadow-md p-5 mb-8">
-        <h3 class="text-lg font-semibold mb-3 text-blue-700">Buscar número de boleto</h3>
-        <div class="flex flex-col md:flex-row gap-3">
-          <input id="searchNumberInput" type="number" placeholder="Introduce número de boleto" class="border rounded p-2 w-full md:w-1/3" />
-          <button id="searchNumberBtn" class="px-4 py-2 bg-blue-600 text-white rounded">🔍 Buscar</button>
-        </div>
-        <div id="searchResult" class="mt-4 text-gray-700"></div>
-      </section>
+  <!-- Selector de clases -->
+  <select id="classSelect" class="mb-4 p-2 border rounded shadow">
+    <option value="">Selecciona una clase</option>
+    <option value="1A">1ºA</option>
+    <option value="1B">1ºB</option>
+    <option value="2A">2ºA</option>
+    <option value="2B">2ºB</option>
+    <option value="3A">3ºA</option>
+    <option value="3B">3ºB</option>
+  </select>
 
-      <!-- Cursos -->
-      <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div class="bg-white rounded-lg shadow-md p-5">
-          <h3 class="text-lg font-semibold mb-3 text-blue-700">Primaria</h3>
-          <ul class="space-y-1 text-gray-700">
-            <li class="course-item p-2 rounded-md border" data-course="1P">1º de Primaria</li>
-            <li class="course-item p-2 rounded-md border" data-course="2P">2º de Primaria</li>
-            <li class="course-item p-2 rounded-md border" data-course="3P">3º de Primaria</li>
-            <li class="course-item p-2 rounded-md border" data-course="4P">4º de Primaria</li>
-            <li class="course-item p-2 rounded-md border" data-course="5P">5º de Primaria</li>
-            <li class="course-item p-2 rounded-md border" data-course="6P">6º de Primaria</li>
-          </ul>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-5">
-          <h3 class="text-lg font-semibold mb-3 text-indigo-700">ESO</h3>
-          <ul class="space-y-1 text-gray-700">
-            <li class="course-item p-2 rounded-md border" data-course="1E">1º de ESO</li>
-            <li class="course-item p-2 rounded-md border" data-course="2E">2º de ESO</li>
-            <li class="course-item p-2 rounded-md border" data-course="3E">3º de ESO</li>
-            <li class="course-item p-2 rounded-md border" data-course="4E">4º de ESO</li>
-            <li class="course-item p-2 rounded-md border" data-course="3EPDC">3º de ESO PDC</li>
-            <li class="course-item p-2 rounded-md border" data-course="4EPDC">4º de ESO PDC</li>
-          </ul>
-        </div>
-      </section>
-
-      <div class="bg-white rounded-lg shadow-md p-5 mb-8">
-        <h3 class="text-lg font-semibold mb-3 text-green-700">Profesores</h3>
-        <ul class="space-y-1 text-gray-700">
-          <li class="course-item p-2 rounded-md border" data-course="PROF-PRI">Profesorado Primaria</li>
-          <li class="course-item p-2 rounded-md border" data-course="PROF-ESO">Profesorado ESO</li>
-          <li class="course-item p-2 rounded-md border" data-course="PROF-OTROS">Otros Profesores</li>
-        </ul>
-      </div>
-
-      <!-- Panel del curso -->
-      <section id="coursePanel" class="bg-white rounded-lg shadow-md p-6 hidden">
-        <h2 id="coursePanelTitle" class="text-xl font-semibold mb-4"></h2>
-
-        <div class="mb-4 flex flex-col md:flex-row md:items-center md:gap-4">
-          <label class="font-medium mr-2">Profesor:</label>
-          <input id="teacherInput" class="border px-2 py-1 rounded w-full md:w-1/2" type="text" />
-          <div class="ml-auto flex gap-2 mt-3 md:mt-0">
-            <button id="openAddStudents" class="px-3 py-2 bg-indigo-600 text-white rounded">➕ Añadir alumnos</button>
-            <button id="openStartNumber" class="px-3 py-2 bg-gray-600 text-white rounded">🔢 Iniciar núm.</button>
-          </div>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full border min-w-[520px]">
-            <thead>
-              <tr class="bg-gray-100">
-                <th class="p-2 text-left">Nombre</th>
-                <th class="p-2 text-left">Números</th>
-                <th class="p-2 text-left">Estado</th>
-                <th class="p-2 text-left">Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="studentsList"></tbody>
-          </table>
-        </div>
-      </section>
-    </main>
+  <!-- Buscador -->
+  <div class="mb-4 flex flex-col items-center">
+    <input id="searchNumber" type="number" placeholder="Buscar número..." class="p-2 border rounded w-40 text-center" />
+    <button id="searchBtn" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Buscar</button>
+    <p id="searchResult" class="mt-3 text-lg font-semibold text-gray-800"></p>
   </div>
 
-  <!-- Modal alumnos -->
-  <div id="studentModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
-    <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
-      <h3 class="text-xl font-semibold mb-4">Añadir alumnos</h3>
-      <input id="numStudents" type="number" placeholder="Número de alumnos (opcional)" class="border rounded p-2 w-full mb-4" />
-      <input id="excelInput" type="file" accept=".xlsx,.xls,.csv" class="border rounded p-2 w-full mb-4" />
-      <div id="studentsForm" class="space-y-3"></div>
-      <div class="flex justify-end mt-4 space-x-2">
-        <button id="cancelModal" class="px-4 py-2 bg-gray-500 text-white rounded">Cancelar</button>
-        <button id="confirmModal" class="px-4 py-2 bg-blue-600 text-white rounded">Aceptar</button>
+  <!-- Botón sorteo -->
+  <button id="raffleBtn" class="mb-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+    SORTEAR
+  </button>
+
+  <!-- Resultado -->
+  <div id="winnerDisplay" class="text-2xl font-bold text-blue-800"></div>
+
+  <!-- Popup agregar alumnos -->
+  <div id="popup" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center">
+    <div class="bg-white p-6 rounded shadow-lg w-96">
+      <h2 class="text-xl font-bold mb-4">Agregar alumnos</h2>
+
+      <input type="file" id="fileInput" accept=".xlsx" class="mb-3" />
+      <p class="text-gray-600 text-sm mb-2">O añade alumnos manualmente:</p>
+
+      <textarea id="manualInput" class="w-full p-2 border rounded mb-3" rows="5"
+        placeholder="Escribe los nombres, uno por línea"></textarea>
+
+      <div class="flex justify-end gap-2">
+        <button id="cancelPopup" class="px-3 py-1 bg-gray-400 text-white rounded">Cancelar</button>
+        <button id="savePopup" class="px-3 py-1 bg-blue-600 text-white rounded">Guardar</button>
       </div>
     </div>
   </div>
 
-  <!-- Modal inicio boletos -->
-  <div id="startNumberModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
-    <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm">
-      <h3 class="text-xl font-semibold mb-4">Configurar boletos</h3>
-      <input id="startNumberInput" type="number" value="1" min="1" class="border rounded p-2 w-full mb-4" />
-      <div class="flex justify-end">
-        <button id="confirmStartNumber" class="px-4 py-2 bg-blue-600 text-white rounded">Aceptar</button>
-      </div>
-    </div>
-  </div>
+  <script>
+    const { createClient } = supabase;
+    const supabaseUrl = "https://frwyfaeofgzlrlocerlc.supabase.co";
+    const supabaseKey =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyd3lmYWVvZmd6bHJsb2NlcmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxMDkwNjQsImV4cCI6MjA3MTY4NTA2NH0.EDixTsOIqO5ovagH9ppAAqhLIFHvGVxaSrfStvlyxpY";
+    const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
-  <!-- Modal borrar todo -->
-  <div id="confirmDeleteModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
-    <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm">
-      <h3 class="text-xl font-semibold mb-4 text-red-600">⚠️ Confirmar borrado</h3>
-      <p class="mb-4">¿Seguro que quieres eliminar todos los datos?</p>
-      <div class="flex justify-end space-x-2">
-        <button id="cancelDelete" class="px-4 py-2 bg-gray-500 text-white rounded">Cancelar</button>
-        <button id="confirmDelete" class="px-4 py-2 bg-red-600 text-white rounded">Sí, eliminar</button>
-      </div>
-    </div>
-  </div>
+    let alumnosData = {};
+    let claseSeleccionada = "";
 
-  <!-- Modal añadir boletos extra -->
-  <div id="addTicketsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
-    <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm">
-      <h3 class="text-xl font-semibold mb-4">Añadir boletos</h3>
-      <label class="block mb-2">¿Cuántos boletos extra quieres añadir?</label>
-      <input id="extraTicketsInput" type="number" min="1" value="1" class="border rounded p-2 w-full mb-4" />
-      <div class="flex justify-end space-x-2">
-        <button id="cancelAddTickets" class="px-4 py-2 bg-gray-500 text-white rounded">Cancelar</button>
-        <button id="confirmAddTickets" class="px-4 py-2 bg-blue-600 text-white rounded">Añadir</button>
-      </div>
-    </div>
-  </div>
+    const classSelect = document.getElementById("classSelect");
+    const raffleBtn = document.getElementById("raffleBtn");
+    const winnerDisplay = document.getElementById("winnerDisplay");
+    const popup = document.getElementById("popup");
+    const cancelPopup = document.getElementById("cancelPopup");
+    const savePopup = document.getElementById("savePopup");
+    const fileInput = document.getElementById("fileInput");
+    const manualInput = document.getElementById("manualInput");
+    const searchNumber = document.getElementById("searchNumber");
+    const searchBtn = document.getElementById("searchBtn");
+    const searchResult = document.getElementById("searchResult");
 
-<script type="module">
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import * as XLSX from "https://cdn.sheetjs.com/xlsx-latest/package/xlsx.mjs";
-
-/* ------------------ CONFIG ------------------ */
-// Pega aquí tu anon key (la que enviaste)
-const SUPABASE_URL = "https://frwyfaeofgzlrlocerlc.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyd3lmYWVvZmd6bHJsb2NlcmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxMDkwNjQsImV4cCI6MjA3MTY4NTA2NH0.EDixTsOIqO5ovagH9ppAAqhLIFHvGVxaSrfStvlyxpY";
-
-// Algunas aplicaciones usan 'rifa_datos', otras 'listas'. Probamos ambos.
-const TABLE_NAMES = ["rifa_datos", "listas"];
-const KEY_COLUMN = "id";
-const DATA_COLUMN = "data"; // jsonb column
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-/* --------------------------------------------- */
-
-let schoolData = {};      // objeto principal
-let currentCourse = null; // curso seleccionado
-let addTicketsIndex = null;
-
-// UI refs
-const studentsList = document.getElementById("studentsList");
-const teacherInput = document.getElementById("teacherInput");
-const coursePanel = document.getElementById("coursePanel");
-const coursePanelTitle = document.getElementById("coursePanelTitle");
-const saveBtn = document.getElementById("saveBtn");
-const saveStatus = document.getElementById("saveStatus");
-const deleteAllBtn = document.getElementById("deleteAllBtn");
-
-// Modales & inputs
-const studentModal = document.getElementById("studentModal");
-const numStudentsInput = document.getElementById("numStudents");
-const studentsForm = document.getElementById("studentsForm");
-const excelInput = document.getElementById("excelInput");
-const cancelModal = document.getElementById("cancelModal");
-const confirmModal = document.getElementById("confirmModal");
-
-const startNumberModal = document.getElementById("startNumberModal");
-const startNumberInput = document.getElementById("startNumberInput");
-const confirmStartNumber = document.getElementById("confirmStartNumber");
-const openStartNumberBtn = document.getElementById("openStartNumber");
-
-const openAddStudentsBtn = document.getElementById("openAddStudents");
-
-const confirmDeleteModal = document.getElementById("confirmDeleteModal");
-const cancelDelete = document.getElementById("cancelDelete");
-const confirmDelete = document.getElementById("confirmDelete");
-
-const addTicketsModal = document.getElementById("addTicketsModal");
-const extraTicketsInput = document.getElementById("extraTicketsInput");
-const cancelAddTickets = document.getElementById("cancelAddTickets");
-const confirmAddTickets = document.getElementById("confirmAddTickets");
-
-/* ------------------ RENDER ------------------ */
-function renderStudentsList() {
-  studentsList.innerHTML = "";
-  if (!currentCourse || !schoolData[currentCourse]) {
-    studentsList.innerHTML = `<tr><td colspan="4" class="p-3 text-gray-500">Abre una clase para ver alumnos</td></tr>`;
-    return;
-  }
-  const arr = schoolData[currentCourse].students || [];
-  if (arr.length === 0) {
-    studentsList.innerHTML = `<tr><td colspan="4" class="p-3 text-gray-500">Sin alumnos cargados</td></tr>`;
-    return;
-  }
-  arr.forEach((s, i) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="p-2 border">${s.name}</td>
-      <td class="p-2 border">${(s.numbers || []).map(n => `<span class="inline-flex items-center bg-gray-200 px-2 py-1 rounded mr-1 mb-1">${n}</span>`).join("")}</td>
-      <td class="p-2 border">
-        <button data-idx="${i}" class="${s.paid ? 'paid-badge' : 'unpaid-badge'} px-2 py-1 rounded">
-          ${s.paid ? 'Pagado' : 'Pendiente'}
-        </button>
-      </td>
-      <td class="p-2 border">
-        <button data-del="${i}" class="bg-red-600 text-white px-2 py-1 rounded">Eliminar</button>
-        <button data-addnum="${i}" class="ml-2 px-2 py-1 bg-blue-500 text-white rounded">+</button>
-      </td>`;
-    studentsList.appendChild(tr);
-  });
-}
-
-/* ------------------ EVENTOS LISTA ------------------ */
-studentsList.addEventListener("click", (e) => {
-  const tgt = e.target;
-  if (tgt.dataset.del !== undefined) {
-    const i = parseInt(tgt.dataset.del);
-    schoolData[currentCourse].students.splice(i, 1);
-    renderStudentsList();
-    return;
-  }
-  if (tgt.dataset.idx !== undefined) {
-    const i = parseInt(tgt.dataset.idx);
-    schoolData[currentCourse].students[i].paid = !schoolData[currentCourse].students[i].paid;
-    renderStudentsList();
-    return;
-  }
-  if (tgt.dataset.addnum !== undefined) {
-    addTicketsIndex = parseInt(tgt.dataset.addnum);
-    extraTicketsInput.value = 1;
-    addTicketsModal.classList.remove("hidden");
-    return;
-  }
-});
-
-/* ------------------ ABRIR CURSO ------------------ */
-document.querySelectorAll(".course-item").forEach(el => {
-  el.addEventListener("click", () => {
-    openCourse(el.dataset.course);
-  });
-});
-
-function openCourse(course) {
-  currentCourse = course;
-  if (!schoolData[currentCourse]) schoolData[currentCourse] = { teacher: "", students: [] };
-
-  // Si no hay alumnos aún, abrimos directamente el modal para añadir alumnos
-  const hasStudents = Array.isArray(schoolData[currentCourse].students) && schoolData[currentCourse].students.length > 0;
-  teacherInput.value = schoolData[currentCourse].teacher || "";
-  coursePanelTitle.textContent = `Curso: ${currentCourse}`;
-
-  if (!hasStudents) {
-    // Limpiamos el formulario interno y abrimos modal para añadir
-    numStudentsInput.value = "";
-    studentsForm.innerHTML = "";
-    excelInput.value = "";
-    studentModal.classList.remove("hidden");
-    // También mostramos el panel para que el usuario sepa qué curso va a rellenar (opcional)
-    coursePanel.classList.remove("hidden");
-    renderStudentsList();
-    return;
-  }
-
-  coursePanel.classList.remove("hidden");
-  renderStudentsList();
-}
-
-/* ------------------ MODAL AÑADIR ALUMNOS ------------------ */
-openAddStudentsBtn.addEventListener("click", () => {
-  numStudentsInput.value = "";
-  studentsForm.innerHTML = "";
-  excelInput.value = "";
-  studentModal.classList.remove("hidden");
-});
-
-numStudentsInput.addEventListener("change", () => {
-  const count = parseInt(numStudentsInput.value) || 0;
-  studentsForm.innerHTML = "";
-  for (let i = 0; i < count; i++) {
-    studentsForm.innerHTML += `
-      <div class="grid grid-cols-1 gap-2 border p-2 rounded">
-        <label>Nombre del alumno</label>
-        <input data-name type="text" class="border p-2 rounded w-full" placeholder="Alumno ${i+1}">
-        <label>Número de boletos</label>
-        <input data-nums type="number" class="border p-2 rounded w-full" min="1" value="1">
-      </div>`;
-  }
-});
-
-excelInput.addEventListener("change", async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  try {
-    const data = await file.arrayBuffer();
-    const wb = XLSX.read(data);
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-    studentsForm.innerHTML = "";
-    rows.forEach((r) => {
-      if (!r[0]) return;
-      const tickets = 10; // Siempre 10 por fila de excel como pediste antes
-      studentsForm.innerHTML += `
-        <div class="grid grid-cols-1 gap-2 border p-2 rounded">
-          <label>Nombre del alumno</label>
-          <input data-name type="text" class="border p-2 rounded w-full" value="${r[0]}">
-          <label>Número de boletos</label>
-          <input data-nums type="number" class="border p-2 rounded w-full" min="1" value="${tickets}">
-        </div>`;
-    });
-  } catch (err) {
-    alert("Error leyendo el archivo Excel.");
-    console.error(err);
-  }
-});
-
-cancelModal.addEventListener("click", () => studentModal.classList.add("hidden"));
-
-confirmModal.addEventListener("click", () => {
-  const blocks = studentsForm.querySelectorAll("div");
-  if (!schoolData[currentCourse]) schoolData[currentCourse] = { teacher: "", students: [] };
-  blocks.forEach(div => {
-    const nameInput = div.querySelector("[data-name]");
-    const numsInput = div.querySelector("[data-nums]");
-    if (!nameInput) return;
-    const name = nameInput.value.trim();
-    const count = parseInt(numsInput?.value) || 1;
-    if (name) {
-      const start = schoolData._nextNum || 1;
-      const nums = Array.from({ length: count }, (_, j) => start + j);
-      schoolData._nextNum = start + count;
-      schoolData[currentCourse].students.push({ name, numbers: nums, paid: false });
+    // Cargar datos desde Supabase
+    async function cargarDatos() {
+      const { data, error } = await supabaseClient.from("rifa_datos").select("data").eq("id", 1).single();
+      if (error) {
+        console.error("Error cargando datos:", error);
+        return {};
+      }
+      return data?.data || {};
     }
-  });
-  studentModal.classList.add("hidden");
-  renderStudentsList();
-});
 
-/* ------------------ INICIO NUMEROS ------------------ */
-openStartNumberBtn.addEventListener("click", () => {
-  startNumberInput.value = schoolData._nextNum || 1;
-  startNumberModal.classList.remove("hidden");
-});
+    // Guardar datos en Supabase
+    async function guardarDatos() {
+      const { error } = await supabaseClient
+        .from("rifa_datos")
+        .update({ data: alumnosData })
+        .eq("id", 1);
+      if (error) console.error("Error guardando datos:", error);
+    }
 
-confirmStartNumber.addEventListener("cl
+    // Mostrar popup al seleccionar clase si está vacía
+    classSelect.addEventListener("change", async () => {
+      claseSeleccionada = classSelect.value;
+      if (!claseSeleccionada) return;
+
+      alumnosData = await cargarDatos();
+
+      if (!alumnosData[claseSeleccionada] || alumnosData[claseSeleccionada].length === 0) {
+        popup.classList.remove("hidden");
+      }
+    });
+
+    // Cancelar popup
+    cancelPopup.addEventListener("click", () => {
+      popup.classList.add("hidden");
+      classSelect.value = "";
+    });
+
+    // Guardar alumnos del popup
+    savePopup.addEventListener("click", async () => {
+      let alumnos = [];
+
+      // Excel
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const workbook = XLSX.read(e.target.result, { type: "binary" });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const data = XLSX.utils.sheet_to_json(sheet, { header: 1 }).flat().filter(x => x);
+          alumnosData[claseSeleccionada] = data;
+          await guardarDatos();
+          popup.classList.add("hidden");
+          alert("Alumnos cargados desde Excel correctamente.");
+        };
+        reader.readAsBinaryString(file);
+        return;
+      }
+
+      // Manual
+      const manual = manualInput.value.trim().split("\n").filter(x => x);
+      if (manual.length > 0) {
+        alumnosData[claseSeleccionada] = manual;
+        await guardarDatos();
+        popup.classList.add("hidden");
+        alert("Alumnos añadidos manualmente correctamente.");
+      } else {
+        alert("Debes subir un Excel o escribir nombres.");
+      }
+    });
+
+    // Botón de sorteo
+    raffleBtn.addEventListener("click", async () => {
+      if (!claseSeleccionada) {
+        alert("Selecciona una clase primero.");
+        return;
+      }
+
+      alumnosData = await cargarDatos();
+      const lista = alumnosData[claseSeleccionada];
+      if (!lista || lista.length === 0) {
+        alert("No hay alumnos en esta clase.");
+        return;
+      }
+
+      const ganador = lista[Math.floor(Math.random() * lista.length)];
+      winnerDisplay.textContent = `🎉 Ganador: ${ganador} (${claseSeleccionada}) 🎉`;
+    });
+
+    // Buscador
+    searchBtn.addEventListener("click", async () => {
+      const numero = parseInt(searchNumber.value);
+      if (isNaN(numero)) {
+        alert("Introduce un número válido.");
+        return;
+      }
+
+      alumnosData = await cargarDatos();
+      let encontrado = null;
+      let claseEncontrada = "";
+
+      for (const clase in alumnosData) {
+        if (numero > 0 && numero <= alumnosData[clase].length) {
+          encontrado = alumnosData[clase][numero - 1];
+          claseEncontrada = clase;
+          break;
+        }
+      }
+
+      if (encontrado) {
+        searchResult.textContent = `🎟️ Nº ${numero}: ${encontrado} (${claseEncontrada})`;
+      } else {
+        searchResult.textContent = "❌ No encontrado";
+      }
+    });
+  </script>
+</body>
+</html>
