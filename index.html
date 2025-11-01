@@ -454,26 +454,43 @@ setInterval(() => {
     if (error) throw error;
 
     if (data && data.contenido) {
+      // ✅ Ya hay datos guardados, cargamos normalmente
       schoolData = JSON.parse(data.contenido);
-      console.log("✅ Datos cargados desde Supabase:", schoolData);
-      // Solo mostrar el popup si no hay datos guardados
+      console.log("✅ Datos cargados correctamente desde Supabase");
     } else {
-      // Solo mostrar el popup si es la primera vez que se abre
-      const hasShown = localStorage.getItem("hasShownStartNumberModal");
+      // ❌ No hay datos → solo mostrar popup la primera vez
+      const hasShown = localStorage.getItem("popupShown");
       if (!hasShown) {
         startNumberModal.classList.remove("hidden");
-        localStorage.setItem("hasShownStartNumberModal", "true");
+        localStorage.setItem("popupShown", "true");
       }
     }
   } catch (err) {
     console.error("❌ Error al cargar:", err);
-    const hasShown = localStorage.getItem("hasShownStartNumberModal");
+    const hasShown = localStorage.getItem("popupShown");
     if (!hasShown) {
       startNumberModal.classList.remove("hidden");
-      localStorage.setItem("hasShownStartNumberModal", "true");
+      localStorage.setItem("popupShown", "true");
     }
   }
 })();
+
+// ✅ Guardar número inicial y crear entrada en Supabase
+confirmStartNumber.addEventListener("click", async () => {
+  const start = parseInt(startNumberInput.value) || 1;
+  schoolData._nextNum = start;
+  startNumberModal.classList.add("hidden");
+
+  try {
+    await supabase
+      .from("listas")
+      .upsert([{ id: 1, contenido: JSON.stringify(schoolData) }], { onConflict: 'id' });
+    console.log("Número inicial guardado correctamente.");
+  } catch (err) {
+    console.error("❌ Error guardando número inicial:", err);
+  }
+});
+
 
 
 
@@ -578,6 +595,7 @@ window.addEventListener("load", () => {
 </script>
 </body>
 </html>
+
 
 
 
