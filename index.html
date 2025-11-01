@@ -459,27 +459,27 @@ setInterval(() => {
       console.log("✅ Datos cargados correctamente desde Supabase");
     } else {
       // ❌ No hay datos → solo mostrar popup la primera vez
-      const hasShown = localStorage.getItem("popupShown");
-      if (!hasShown) {
+      if (!localStorage.getItem("boletosInicializado")) {
         startNumberModal.classList.remove("hidden");
-        localStorage.setItem("popupShown", "true");
       }
     }
   } catch (err) {
     console.error("❌ Error al cargar:", err);
-    const hasShown = localStorage.getItem("popupShown");
-    if (!hasShown) {
+    if (!localStorage.getItem("boletosInicializado")) {
       startNumberModal.classList.remove("hidden");
-      localStorage.setItem("popupShown", "true");
     }
   }
 })();
+
 
 // ✅ Guardar número inicial y crear entrada en Supabase
 confirmStartNumber.addEventListener("click", async () => {
   const start = parseInt(startNumberInput.value) || 1;
   schoolData._nextNum = start;
   startNumberModal.classList.add("hidden");
+
+  // ✅ Guardamos flag local para no volver a mostrar el popup
+  localStorage.setItem("boletosInicializado", "true");
 
   try {
     await supabase
@@ -490,6 +490,7 @@ confirmStartNumber.addEventListener("click", async () => {
     console.error("❌ Error guardando número inicial:", err);
   }
 });
+
 
 
 
@@ -595,6 +596,7 @@ window.addEventListener("load", () => {
 </script>
 </body>
 </html>
+
 
 
 
