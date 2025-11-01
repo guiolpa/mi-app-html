@@ -452,17 +452,21 @@ setInterval(() => {
     if (error) throw error;
 
     if (data && data.contenido) {
+      // Ya existen datos guardados → los cargamos directamente
       schoolData = JSON.parse(data.contenido);
       console.log("✅ Datos cargados correctamente desde Supabase");
     } else {
+      // No existen datos → mostrar pop-up inicial solo esta primera vez
       console.log("⚠️ No hay datos guardados aún, mostrando pop-up inicial");
       startNumberModal.classList.remove("hidden");
     }
   } catch (err) {
     console.error("❌ Error al cargar:", err);
+    // Si falla la carga (por red o tabla vacía), mostrar el pop-up inicial
     startNumberModal.classList.remove("hidden");
   }
 })();
+
 
 
 /* ------------------ BUSCADOR ------------------ */
@@ -565,5 +569,6 @@ window.addEventListener("load", () => {
 </script>
 </body>
 </html>
+
 
 
