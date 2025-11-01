@@ -401,7 +401,6 @@ confirmDelete.addEventListener("click", async () => {
 // === GUARDAR DATOS ===
 async function saveData(auto = false) {
   try {
-    // Intentar insertar o actualizar el registro con id=1
     const { error } = await supabase
       .from("listas")
       .upsert(
@@ -440,6 +439,59 @@ saveBtn.addEventListener("click", () => saveData(false));
 setInterval(() => {
   if (Object.keys(schoolData).length > 0) saveData(true);
 }, 60000);
+
+
+// === CARGAR DATOS AL INICIAR ===
+(async function loadData() {
+  try {
+    const { data, error } = await supabase
+      .from("listas")
+      .select("contenido")
+      .eq("id", 1)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    const inicializado = localStorage.getItem("boletosInicializado");
+
+    if (data && data.contenido) {
+      // ✅ Ya hay datos guardados
+      schoolData = JSON.parse(data.contenido);
+      console.log("✅ Datos cargados correctamente desde Supabase");
+    } else if (!inicializado) {
+      // ❌ No hay datos y nunca se inicializó
+      startNumberModal.classList.remove("hidden");
+    }
+  } catch (err) {
+    console.error("❌ Error al cargar:", err);
+    const inicializado = localStorage.getItem("boletosInicializado");
+    if (!inicializado) {
+      startNumberModal.classList.remove("hidden");
+    }
+  }
+})();
+
+
+// === GUARDAR NÚMERO INICIAL Y CREAR ENTRADA EN SUPABASE ===
+confirmStartNumber.addEventListener("click", async () => {
+  const start = parseInt(startNumberInput.value) || 1;
+  schoolData._nextNum = start;
+  startNumberModal.classList.add("hidden");
+
+  try {
+    await supabase
+      .from("listas")
+      .upsert([{ id: 1, contenido: JSON.stringify(schoolData) }], { onConflict: 'id' });
+
+    // ✅ Guardar flag después de confirmar y guardar correctamente
+    localStorage.setItem("boletosInicializado", "true");
+
+    console.log("Número inicial guardado correctamente.");
+  } catch (err) {
+    console.error("❌ Error guardando número inicial:", err);
+  }
+});
+
 
 
 // === CARGAR DATOS AL INICIAR ===
@@ -648,6 +700,7 @@ window.addEventListener("load", () => {
 </script>
 </body>
 </html>
+
 
 
 
