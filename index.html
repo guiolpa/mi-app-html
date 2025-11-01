@@ -398,30 +398,60 @@ confirmDelete.addEventListener("click", async () => {
   location.reload();
 });
 
-/* ------------------ GUARDADO ------------------ */
+// === GUARDAR DATOS ===
 async function saveData(auto = false) {
-  const payload = { [KEY_COLUMN]: 1, [DATA_COLUMN]: schoolData };
   try {
-    const { error } = await supabase.from(TABLE_NAME).upsert([payload]);
+    const { error } = await supabase
+      .from("listas")
+      .upsert([{ id: 1, contenido: JSON.stringify(schoolData) }], { onConflict: 'id' });
+
     if (error) throw error;
+
     const now = new Date().toLocaleTimeString();
-    saveStatus.textContent = auto ? `Guardado automático ✔ (${now})` : `Guardado ✔ (${now})`;
-    saveStatus.style.color = "green";
-    return true;
+    if (auto) {
+      saveStatus.textContent = `Guardado automático ✔ (${now})`;
+      saveStatus.style.color = "gray";
+    } else {
+      saveStatus.textContent = `Guardado ✔ (${now})`;
+      saveStatus.style.color = "green";
+    }
   } catch (err) {
-    console.error("Error guardando:", err);
-    saveStatus.textContent = "Error guardando";
+    console.error("❌ Error al guardar:", err);
+    saveStatus.textContent = "Error al guardar";
     saveStatus.style.color = "red";
-    return false;
   }
 }
+
+// Botón manual de guardado
 saveBtn.addEventListener("click", () => saveData(false));
 
-// Auto-guardado cada 1 minuto (60000 ms)
+// Guardado automático cada 60 segundos
 setInterval(() => {
-  // solo auto-save si hay algún dato (evita guardar objeto vacío constantemente)
   if (Object.keys(schoolData).length > 0) saveData(true);
 }, 60000);
+
+
+// === CARGAR DATOS AL INICIAR ===
+(async function loadData() {
+  try {
+    const { data, error } = await supabase
+      .from("listas")
+      .select("contenido")
+      .eq("id", 1)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (data && data.contenido) {
+      schoolData = JSON.parse(data.contenido);
+    } else {
+      startNumberModal.classList.remove("hidden");
+    }
+  } catch (err) {
+    console.error("❌ Error al cargar:", err);
+    startNumberModal.classList.remove("hidden");
+  }
+})();
 
 /* ------------------ BUSCADOR ------------------ */
 const searchNumberInput = document.getElementById("searchNumberInput");
@@ -523,3 +553,4 @@ window.addEventListener("load", () => {
 </script>
 </body>
 </html>
+
