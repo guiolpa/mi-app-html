@@ -403,7 +403,16 @@ async function saveData(auto = false) {
   try {
     const { error } = await supabase
       .from("listas")
-      .upsert([{ id: 1, contenido: JSON.stringify(schoolData) }], { onConflict: 'id' });
+      .upsert(
+        [
+          {
+            id: 1,
+            contenido: JSON.stringify(schoolData),
+            creado_en: new Date().toISOString()
+          }
+        ],
+        { onConflict: "id" }
+      );
 
     if (error) throw error;
 
@@ -444,7 +453,9 @@ setInterval(() => {
 
     if (data && data.contenido) {
       schoolData = JSON.parse(data.contenido);
+      console.log("✅ Datos cargados correctamente desde Supabase");
     } else {
+      console.log("⚠️ No hay datos guardados aún, mostrando pop-up inicial");
       startNumberModal.classList.remove("hidden");
     }
   } catch (err) {
@@ -452,6 +463,7 @@ setInterval(() => {
     startNumberModal.classList.remove("hidden");
   }
 })();
+
 
 /* ------------------ BUSCADOR ------------------ */
 const searchNumberInput = document.getElementById("searchNumberInput");
@@ -553,4 +565,5 @@ window.addEventListener("load", () => {
 </script>
 </body>
 </html>
+
 
