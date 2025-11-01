@@ -458,6 +458,58 @@ setInterval(() => {
       schoolData = JSON.parse(data.contenido);
       console.log("✅ Datos cargados correctamente desde Supabase");
     } else {
+      // ❌ No hay datos → mostrar popup solo si no se ha inicializado antes
+      const inicializado = localStorage.getItem("boletosInicializado");
+      if (!inicializado) {
+        startNumberModal.classList.remove("hidden");
+      }
+    }
+  } catch (err) {
+    console.error("❌ Error al cargar:", err);
+    const inicializado = localStorage.getItem("boletosInicializado");
+    if (!inicializado) {
+      startNumberModal.classList.remove("hidden");
+    }
+  }
+})();
+
+
+// === GUARDAR NÚMERO INICIAL Y CREAR ENTRADA EN SUPABASE ===
+confirmStartNumber.addEventListener("click", async () => {
+  const start = parseInt(startNumberInput.value) || 1;
+  schoolData._nextNum = start;
+  startNumberModal.classList.add("hidden");
+
+  // ✅ Guardamos flag local para no volver a mostrar el popup
+  localStorage.setItem("boletosInicializado", "true");
+
+  try {
+    await supabase
+      .from("listas")
+      .upsert([{ id: 1, contenido: JSON.stringify(schoolData) }], { onConflict: 'id' });
+    console.log("Número inicial guardado correctamente.");
+  } catch (err) {
+    console.error("❌ Error guardando número inicial:", err);
+  }
+});
+
+
+// === CARGAR DATOS AL INICIAR ===
+(async function loadData() {
+  try {
+    const { data, error } = await supabase
+      .from("listas")
+      .select("contenido")
+      .eq("id", 1)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (data && data.contenido) {
+      // ✅ Ya hay datos guardados, cargamos normalmente
+      schoolData = JSON.parse(data.contenido);
+      console.log("✅ Datos cargados correctamente desde Supabase");
+    } else {
       // ❌ No hay datos → solo mostrar popup la primera vez
       if (!localStorage.getItem("boletosInicializado")) {
         startNumberModal.classList.remove("hidden");
@@ -596,6 +648,7 @@ window.addEventListener("load", () => {
 </script>
 </body>
 </html>
+
 
 
 
